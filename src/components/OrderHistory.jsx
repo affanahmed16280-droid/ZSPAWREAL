@@ -4,6 +4,7 @@ import {
   HiClock,
   HiCheckCircle,
   HiShoppingCart,
+  HiBan,
 } from 'react-icons/hi';
 import { useOrders } from '../hooks/useOrders';
 import { updateOrderStatus } from '../firebase/config';
@@ -14,6 +15,7 @@ const FILTERS = [
   { key: 'all', label: 'All' },
   { key: 'Pending', label: 'Pending' },
   { key: 'Completed', label: 'Completed' },
+  { key: 'Cancelled', label: 'Cancelled' },
 ];
 
 export default function OrderHistory() {
@@ -61,6 +63,7 @@ export default function OrderHistory() {
           >
             {f.key === 'Pending' && <HiClock className="text-sm" />}
             {f.key === 'Completed' && <HiCheckCircle className="text-sm" />}
+            {f.key === 'Cancelled' && <HiBan className="text-sm" />}
             {f.label}
             {filter === f.key && orders && (
               <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full ml-1">

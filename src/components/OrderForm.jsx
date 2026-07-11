@@ -92,7 +92,11 @@ export default function OrderForm() {
       lookupTimer.current = setTimeout(async () => {
         try {
           const results = await fbSearchCustomers(phone);
-          const match = results.find((c) => c.phone === form.customerPhone || c.phone === phone);
+          const normalizedPhone = phone.replace(/\D/g, '');
+          const match = results.find((c) => {
+            const cNorm = (c.phone || '').replace(/\D/g, '');
+            return cNorm === normalizedPhone;
+          });
           if (match) {
             set('customerName', match.name);
             setExistingCustomer(true);

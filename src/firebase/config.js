@@ -9,6 +9,7 @@ import {
   setDoc,
   addDoc,
   updateDoc,
+  deleteDoc,
   getDocs,
   query,
   where,
@@ -43,6 +44,15 @@ const db = initializeFirestore(app, {
 
 export { db };
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+/**
+ * Normalize a phone string by stripping all non-digit characters.
+ * This ensures consistent storage and lookup.
+ */
+function normalizePhone(phone) {
+  return (phone || '').replace(/\D/g, '');
+}
+
 // ─── Collection References ───────────────────────────────────────────────────
 const ordersCol = collection(db, 'orders');
 const customersCol = collection(db, 'customers');
@@ -55,7 +65,7 @@ const countersDoc = doc(db, 'metadata', 'counters');
 //   1. Ensure the customer document exists at customers/{phone}.
 //   2. Run a transaction to increment metadata/counters.totalOrders.
 //   3. Create the order document with the new sequential ID.
-//   4. Return the sequential ID.
+//   4. Return an object with the sequential ID.
 export async function createOrder({
   customerPhone,
   customerName,
@@ -73,14 +83,18 @@ export async function createOrder({
   frameDetails,
   totalAmount,
 }) {
+  // Normalize phone for consistent document IDs
+  const phone = normalizePhone(customerPhone);
+  if (!phone) throw new Error('Phone number is required');
+
   // 1. Upsert customer -------------------------------------------------------
-  const customerRef = doc(customersCol, customerPhone);
+  const customerRef = doc(customersCol, phone);
   const customerSnap = await getDoc(customerRef);
 
   if (!customerSnap.exists()) {
     await setDoc(customerRef, {
-      name: customerName.toLowerCase(),
-      displayName: customerName,
+      name: (customerName || '').toLowerCase(),
+      displayName: customerName || '',
       createdAt: Timestamp.now(),
     });
   }
@@ -106,8 +120,8 @@ export async function createOrder({
     const orderRef = doc(ordersCol);
     transaction.set(orderRef, {
       orderSequenceId: nextId,
-      customerPhone,
-      customerName,
+      customerPhone: phone,
+      customerName: customerName || '',
       sphRight: sphRight ?? null,
       cylRight: cylRight ?? null,
       axisRight: axisRight ?? null,
@@ -128,8 +142,8 @@ export async function createOrder({
     return nextId;
   });
 
-  // 4. Return the sequential ID -----------------------------------------------
-  return sequenceId;
+  // 4. Return an object (fixes bug where OrderForm expected .orderSequenceId)
+  return { orderSequenceId: sequenceId };
 }
 
 // ─── updateOrderStatus ───────────────────────────────────────────────────────
@@ -141,49 +155,77 @@ export async function updateOrderStatus(orderId, newStatus) {
   });
 }
 
+// ─── deleteOrder ─────────────────────────────────────────────────────────────
+// Permanently deletes an order document from Firestore.
+export async function deleteOrder(orderId) {
+  const orderRef = doc(ordersCol, orderId);
+  await deleteDoc(orderRef);
+}
+
 // ─── searchCustomers ─────────────────────────────────────────────────────────
 // Searches by exact-prefix phone number OR case-insensitive name prefix.
+// Now includes a fallback exact-match lookup for phone numbers.
 export async function searchCustomers(searchQuery) {
   if (!searchQuery || searchQuery.trim().length === 0) {
     return [];
   }
 
   const trimmed = searchQuery.trim();
-  let q;
-
   const isPhone = /^\d/.test(trimmed) && trimmed.length >= 3;
 
   if (isPhone) {
-    // Phone search – doc IDs are phone numbers
-    q = query(
+    const normalized = normalizePhone(trimmed);
+    
+    // Try prefix search first
+    let q = query(
       customersCol,
-      where('__name__', '>=', trimmed),
-      where('__name__', '<=', trimmed + '\uf8ff'),
+      where('__name__', '>=', normalized),
+      where('__name__', '<=', normalized + '\uf8ff'),
       limit(20),
     );
+
+    let snap = await getDocs(q);
+    
+    // Fallback: try exact document lookup if prefix search returned nothing
+    if (snap.empty && normalized.length >= 7) {
+      const exactRef = doc(customersCol, normalized);
+      const exactSnap = await getDoc(exactRef);
+      if (exactSnap.exists()) {
+        return [{
+          phone: exactSnap.id,
+          ...exactSnap.data(),
+        }];
+      }
+    }
+
+    return snap.docs.map((d) => ({
+      phone: d.id,
+      ...d.data(),
+    }));
   } else {
     // Name search – the `name` field is stored in lowercase
     const lowerQuery = trimmed.toLowerCase();
-    q = query(
+    const q = query(
       customersCol,
       where('name', '>=', lowerQuery),
       where('name', '<=', lowerQuery + '\uf8ff'),
       limit(20),
     );
-  }
 
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({
-    phone: d.id,
-    ...d.data(),
-  }));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({
+      phone: d.id,
+      ...d.data(),
+    }));
+  }
 }
 
 // ─── getOrdersByCustomerPhone ────────────────────────────────────────────────
 export async function getOrdersByCustomerPhone(phone) {
+  const normalized = normalizePhone(phone);
   const q = query(
     ordersCol,
-    where('customerPhone', '==', phone),
+    where('customerPhone', '==', normalized),
     orderBy('orderDate', 'desc'),
   );
 

@@ -6,6 +6,7 @@ import {
   HiCheckCircle,
   HiClock,
   HiTrendingUp,
+  HiDownload,
 } from 'react-icons/hi';
 import { useStats } from '../hooks/useStats';
 import { formatCurrency } from '../utils/helpers';
@@ -16,8 +17,34 @@ const PERIODS = [
   { key: 'month', label: 'This Month' },
 ];
 
+function getPeriodLabel(period) {
+  const labels = { day: 'Today', week: 'This Week', month: 'This Month' };
+  return labels[period] || period;
+}
+
+function getPeriodDateRange(period) {
+  const now = new Date();
+  const options = { year: 'numeric', month: 'short', day: 'numeric' };
+  const endStr = now.toLocaleDateString('en-US', options);
+
+  if (period === 'day') {
+    return endStr;
+  }
+  if (period === 'week') {
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - now.getDay());
+    return `${weekStart.toLocaleDateString('en-US', options)} – ${endStr}`;
+  }
+  if (period === 'month') {
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    return `${monthStart.toLocaleDateString('en-US', options)} – ${endStr}`;
+  }
+  return endStr;
+}
+
 export default function Reports() {
   const [period, setPeriod] = useState('day');
+  const [generatingPdf, setGeneratingPdf] = useState(false);
   const { totalOrders, totalRevenue, pendingOrders, completedOrders, brandStats, coatingStats, loading } = useStats(period);
 
   const avgOrderValue = useMemo(() => {
@@ -34,6 +61,131 @@ export default function Reports() {
     if (!coatingStats || coatingStats.length === 0) return 1;
     return Math.max(...coatingStats.map((c) => c.count), 1);
   }, [coatingStats]);
+
+  const handleDownloadPdf = async () => {
+    setGeneratingPdf(true);
+    try {
+      const { default: jsPDF } = await import('jspdf');
+      await import('jspdf-autotable');
+
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const periodLabel = getPeriodLabel(period);
+      const dateRange = getPeriodDateRange(period);
+      let y = 20;
+
+      // Title
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      doc.text('ZS Trading', 14, y);
+      y += 10;
+
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Sales Report — ${periodLabel}`, 14, y);
+      y += 7;
+
+      doc.setFontSize(10);
+      doc.setTextColor(120);
+      doc.text(`Period: ${dateRange}`, 14, y);
+      y += 4;
+      doc.text(`Generated: ${new Date().toLocaleString('en-US')}`, 14, y);
+      doc.setTextColor(0);
+      y += 12;
+
+      // Summary table
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Summary', 14, y);
+      y += 2;
+
+      doc.autoTable({
+        startY: y,
+        head: [['Metric', 'Value']],
+        body: [
+          ['Total Orders', String(totalOrders)],
+          ['Total Revenue', formatCurrency(totalRevenue)],
+          ['Completed Orders', String(completedOrders)],
+          ['Pending Orders', String(pendingOrders)],
+          ['Average Order Value', formatCurrency(avgOrderValue)],
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [79, 70, 229], fontSize: 11 },
+        styles: { fontSize: 10 },
+        margin: { left: 14, right: 14 },
+      });
+
+      y = doc.lastAutoTable.finalY + 14;
+
+      // Brand breakdown
+      if (brandStats && brandStats.length > 0) {
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Lens Brand Breakdown', 14, y);
+        y += 2;
+
+        doc.autoTable({
+          startY: y,
+          head: [['Brand', 'Orders', 'Revenue']],
+          body: brandStats.map((b) => [b.brand, String(b.count), formatCurrency(b.revenue)]),
+          theme: 'striped',
+          headStyles: { fillColor: [16, 185, 129], fontSize: 11 },
+          styles: { fontSize: 10 },
+          margin: { left: 14, right: 14 },
+        });
+
+        y = doc.lastAutoTable.finalY + 14;
+      }
+
+      // Coating breakdown
+      if (coatingStats && coatingStats.length > 0) {
+        // Check if we need a new page
+        if (y > 240) {
+          doc.addPage();
+          y = 20;
+        }
+
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Coating Distribution', 14, y);
+        y += 2;
+
+        doc.autoTable({
+          startY: y,
+          head: [['Coating', 'Orders', 'Revenue']],
+          body: coatingStats.map((c) => [c.coating, String(c.count), formatCurrency(c.revenue)]),
+          theme: 'striped',
+          headStyles: { fillColor: [245, 158, 11], fontSize: 11 },
+          styles: { fontSize: 10 },
+          margin: { left: 14, right: 14 },
+        });
+      }
+
+      // Footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(
+          `ZS Trading — Sales Report | Page ${i} of ${pageCount}`,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: 'center' },
+        );
+      }
+
+      // Save
+      const fileName = `ZS_Trading_Report_${periodLabel.replace(/\s/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      doc.save(fileName);
+    } catch (err) {
+      console.error('PDF generation error:', err);
+      const { default: toast } = await import('react-hot-toast');
+      toast.error('Failed to generate PDF');
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
 
   return (
     <div className="px-4 py-6 space-y-6">
@@ -70,6 +222,32 @@ export default function Reports() {
 
       {!loading && (
         <>
+          {/* Download PDF Button */}
+          <div className="animate-fade-in" style={{ animationDelay: '75ms' }}>
+            <button
+              onClick={handleDownloadPdf}
+              disabled={generatingPdf || totalOrders === 0}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold
+                bg-gradient-to-r from-violet-600 to-indigo-600 text-white
+                hover:from-violet-500 hover:to-indigo-500
+                transition-all duration-200 active:scale-[0.97]
+                disabled:opacity-40 disabled:cursor-not-allowed min-h-[48px]
+                shadow-lg shadow-violet-500/20"
+            >
+              {generatingPdf ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Generating PDF...
+                </>
+              ) : (
+                <>
+                  <HiDownload className="text-lg" />
+                  Download PDF Report
+                </>
+              )}
+            </button>
+          </div>
+
           {/* Summary Cards */}
           <div className="grid grid-cols-2 gap-3 animate-slide-up" style={{ animationDelay: '100ms' }}>
             {/* Total Revenue - Full Width Highlight */}

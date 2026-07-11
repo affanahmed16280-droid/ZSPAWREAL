@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
 import {
   collection,
+  doc,
+  getDoc,
   query,
   where,
   orderBy,
@@ -8,6 +10,13 @@ import {
   limit,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
+
+/**
+ * Normalize a phone string by stripping all non-digit characters.
+ */
+function normalizePhone(phone) {
+  return (phone || '').replace(/\D/g, '');
+}
 
 /**
  * useCustomers — search customers by phone prefix or name prefix.
@@ -43,33 +52,48 @@ export function useCustomers() {
       const customersCol = collection(db, 'customers');
       const ordersCol = collection(db, 'orders');
 
-      let customerQuery;
+      let customerDocs = [];
       const isPhone = /^\d/.test(trimmed) && trimmed.length >= 3;
 
       if (isPhone) {
+        const normalized = normalizePhone(trimmed);
+
         // Phone-prefix search using document-ID range query
-        customerQuery = query(
+        const customerQuery = query(
           customersCol,
-          where('__name__', '>=', trimmed),
-          where('__name__', '<=', trimmed + '\uf8ff'),
+          where('__name__', '>=', normalized),
+          where('__name__', '<=', normalized + '\uf8ff'),
           limit(20),
         );
+
+        const customerSnap = await getDocs(customerQuery);
+        customerDocs = customerSnap.docs;
+
+        // Fallback: try exact document lookup if prefix search returned nothing
+        if (customerDocs.length === 0 && normalized.length >= 7) {
+          const exactRef = doc(customersCol, normalized);
+          const exactSnap = await getDoc(exactRef);
+          if (exactSnap.exists()) {
+            customerDocs = [exactSnap];
+          }
+        }
       } else {
         // Name-prefix search (lowercase stored in `name` field)
         const lowerQuery = trimmed.toLowerCase();
-        customerQuery = query(
+        const customerQuery = query(
           customersCol,
           where('name', '>=', lowerQuery),
           where('name', '<=', lowerQuery + '\uf8ff'),
           limit(20),
         );
-      }
 
-      const customerSnap = await getDocs(customerQuery);
+        const customerSnap = await getDocs(customerQuery);
+        customerDocs = customerSnap.docs;
+      }
 
       // For every matching customer, fetch their orders in parallel
       const customers = await Promise.all(
-        customerSnap.docs.map(async (customerDoc) => {
+        customerDocs.map(async (customerDoc) => {
           const phone = customerDoc.id;
           const customerData = customerDoc.data();
 
