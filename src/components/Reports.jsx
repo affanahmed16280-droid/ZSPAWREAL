@@ -122,14 +122,14 @@ export default function Reports() {
           const date = order.orderDate?.toDate ? order.orderDate.toDate() : new Date(order.orderDate);
           const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
           const category = getOrderCategory(order);
-          const amount = formatCurrency(order.totalAmount);
+          const amount = formatCurrency(order.totalAmount).replace('৳', 'Tk ');
           return [String(idx + 1), dateStr, category, amount];
         });
 
       // Sales spreadsheet table
       autoTable(doc, {
         startY: y,
-        head: [['#', 'Date', 'Category', 'Amount (৳)']],
+        head: [['#', 'Date', 'Category', 'Amount (Tk)']],
         body: tableRows,
         theme: 'grid',
         headStyles: {
@@ -171,7 +171,7 @@ export default function Reports() {
       doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
       doc.text(`Total Orders: ${totalOrders}`, 14, y);
-      doc.text(`Total: ${formatCurrency(totalRevenue)}`, pageWidth - 14, y, { align: 'right' });
+      doc.text(`Total: ${formatCurrency(totalRevenue).replace('৳', 'Tk ')}`, pageWidth - 14, y, { align: 'right' });
 
       // Footer on all pages
       const pageCount = doc.internal.getNumberOfPages();
