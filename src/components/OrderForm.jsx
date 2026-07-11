@@ -14,6 +14,7 @@ const LENS_BRANDS = ['Varilux', 'Essilor', 'Zeiss', 'Hoya', 'Kodak', 'Other'];
 const LENS_COATINGS = ['Blue Cut', 'Green Cut', 'Anti-Reflective', 'Photochromic', 'None'];
 
 const initialForm = {
+  orderType: 'prescription', // prescription, sunglasses, contact_lenses, servicing
   customerPhone: '',
   customerName: '',
   sphRight: '', cylRight: '', axisRight: '', addRight: '',
@@ -22,6 +23,12 @@ const initialForm = {
   lensBrand: '',
   lensCoating: '',
   frameDetails: '',
+  sunglassBrand: '',
+  sunglassModel: '',
+  sunglassColor: '',
+  contactBrand: '',
+  quantity: '',
+  serviceDescription: '',
   totalAmount: '',
 };
 
@@ -161,12 +168,39 @@ export default function OrderForm() {
           <HiEye className="text-xl text-white" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-white">New Prescription Order</h1>
+          <h1 className="text-xl font-bold text-white">New Order</h1>
           <p className="text-xs text-white/40">Enter patient details below</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Order Type */}
+        <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '25ms' }}>
+          <h3 className="text-sm font-semibold text-white">Order Type</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {['prescription', 'sunglasses', 'contact_lenses', 'servicing'].map((type) => {
+              const labels = {
+                prescription: 'Prescription Glasses',
+                sunglasses: 'Sunglasses',
+                contact_lenses: 'Contact Lenses',
+                servicing: 'Servicing / Frame',
+              };
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => set('orderType', type)}
+                  className={`chip min-h-[44px] px-3 py-2 text-[11px] font-medium transition-all duration-200 ${
+                    form.orderType === type ? 'chip-active' : 'chip-inactive'
+                  }`}
+                >
+                  {labels[type]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Customer Info */}
         <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '50ms' }}>
           <h3 className="text-sm font-semibold text-white flex items-center gap-2">
@@ -201,50 +235,126 @@ export default function OrderForm() {
           </div>
         </div>
 
-        {/* Right Eye */}
-        <div className="animate-fade-in" style={{ animationDelay: '100ms' }}>
-          <PrescriptionGrid eye="OD" prefix="Right" label="Right Eye" form={form} set={set} />
-        </div>
+        {/* === PRESCRIPTION GLASSES === */}
+        {form.orderType === 'prescription' && (
+          <>
+            <div className="animate-fade-in" style={{ animationDelay: '100ms' }}>
+              <PrescriptionGrid eye="OD" prefix="Right" label="Right Eye" form={form} set={set} />
+            </div>
+            <div className="animate-fade-in" style={{ animationDelay: '150ms' }}>
+              <PrescriptionGrid eye="OS" prefix="Left" label="Left Eye" form={form} set={set} />
+            </div>
+            <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '200ms' }}>
+              <h3 className="text-sm font-semibold text-white">Pupillary Distance (PD)</h3>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={form.pd}
+                onChange={(e) => set('pd', e.target.value)}
+                placeholder="e.g. 63"
+                className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]"
+              />
+            </div>
+            <div className="animate-fade-in" style={{ animationDelay: '250ms' }}>
+              <ChipSelector label="Lens Brand" options={LENS_BRANDS} field="lensBrand" form={form} set={set} />
+            </div>
+            <div className="animate-fade-in" style={{ animationDelay: '300ms' }}>
+              <ChipSelector label="Lens Coating" options={LENS_COATINGS} field="lensCoating" form={form} set={set} />
+            </div>
+            <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '350ms' }}>
+              <h3 className="text-sm font-semibold text-white">Frame Details</h3>
+              <input
+                type="text"
+                value={form.frameDetails}
+                onChange={(e) => set('frameDetails', e.target.value)}
+                placeholder="Frame model / description"
+                className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]"
+              />
+            </div>
+          </>
+        )}
 
-        {/* Left Eye */}
-        <div className="animate-fade-in" style={{ animationDelay: '150ms' }}>
-          <PrescriptionGrid eye="OS" prefix="Left" label="Left Eye" form={form} set={set} />
-        </div>
+        {/* === SUNGLASSES === */}
+        {form.orderType === 'sunglasses' && (
+          <>
+            <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '100ms' }}>
+              <h3 className="text-sm font-semibold text-white">Sunglasses Details</h3>
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  value={form.sunglassBrand}
+                  onChange={(e) => set('sunglassBrand', e.target.value)}
+                  placeholder="Brand (e.g. Ray-Ban)"
+                  className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]"
+                />
+                <input
+                  type="text"
+                  value={form.sunglassModel}
+                  onChange={(e) => set('sunglassModel', e.target.value)}
+                  placeholder="Model Name / Number"
+                  className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]"
+                />
+                <input
+                  type="text"
+                  value={form.sunglassColor}
+                  onChange={(e) => set('sunglassColor', e.target.value)}
+                  placeholder="Color (e.g. Matte Black)"
+                  className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]"
+                />
+              </div>
+            </div>
+          </>
+        )}
 
-        {/* PD */}
-        <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '200ms' }}>
-          <h3 className="text-sm font-semibold text-white">Pupillary Distance (PD)</h3>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={form.pd}
-            onChange={(e) => set('pd', e.target.value)}
-            placeholder="e.g. 63"
-            className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]"
-          />
-        </div>
+        {/* === CONTACT LENSES === */}
+        {form.orderType === 'contact_lenses' && (
+          <>
+            <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '100ms' }}>
+              <h3 className="text-sm font-semibold text-white">Contact Lens Brand</h3>
+              <input
+                type="text"
+                value={form.contactBrand}
+                onChange={(e) => set('contactBrand', e.target.value)}
+                placeholder="Brand (e.g. Acuvue, Alcon)"
+                className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]"
+              />
+            </div>
+            
+            <div className="animate-fade-in" style={{ animationDelay: '150ms' }}>
+              <PrescriptionGrid eye="OD" prefix="Right" label="Right Eye Power" form={form} set={set} />
+            </div>
+            
+            <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+              <PrescriptionGrid eye="OS" prefix="Left" label="Left Eye Power" form={form} set={set} />
+            </div>
+            
+            <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '250ms' }}>
+              <h3 className="text-sm font-semibold text-white">Box / Quantity</h3>
+              <input
+                type="text"
+                value={form.quantity}
+                onChange={(e) => set('quantity', e.target.value)}
+                placeholder="e.g. 2 Boxes"
+                className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]"
+              />
+            </div>
+          </>
+        )}
 
-        {/* Lens Brand */}
-        <div className="animate-fade-in" style={{ animationDelay: '250ms' }}>
-          <ChipSelector label="Lens Brand" options={LENS_BRANDS} field="lensBrand" form={form} set={set} />
-        </div>
-
-        {/* Lens Coating */}
-        <div className="animate-fade-in" style={{ animationDelay: '300ms' }}>
-          <ChipSelector label="Lens Coating" options={LENS_COATINGS} field="lensCoating" form={form} set={set} />
-        </div>
-
-        {/* Frame Details */}
-        <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '350ms' }}>
-          <h3 className="text-sm font-semibold text-white">Frame Details</h3>
-          <input
-            type="text"
-            value={form.frameDetails}
-            onChange={(e) => set('frameDetails', e.target.value)}
-            placeholder="Frame model / description"
-            className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]"
-          />
-        </div>
+        {/* === SERVICING / FRAME === */}
+        {form.orderType === 'servicing' && (
+          <>
+            <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '100ms' }}>
+              <h3 className="text-sm font-semibold text-white">Service Details</h3>
+              <textarea
+                value={form.serviceDescription}
+                onChange={(e) => set('serviceDescription', e.target.value)}
+                placeholder="Describe the repair or service needed (e.g. Frame alignment, nose pad replacement, screw loose)"
+                className="input-field w-full py-2.5 px-3 text-sm min-h-[100px] resize-none"
+              />
+            </div>
+          </>
+        )}
 
         {/* Total Amount */}
         <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '400ms' }}>

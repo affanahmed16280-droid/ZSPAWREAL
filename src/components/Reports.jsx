@@ -48,12 +48,17 @@ function getPeriodDateRange(period) {
 export default function Reports() {
   const [period, setPeriod] = useState('day');
   const [generatingPdf, setGeneratingPdf] = useState(false);
-  const { totalOrders, totalRevenue, pendingOrders, completedOrders, brandStats, coatingStats, loading } = useStats(period);
+  const { totalOrders, totalRevenue, pendingOrders, completedOrders, brandStats, coatingStats, typeStats, loading } = useStats(period);
 
   const avgOrderValue = useMemo(() => {
     if (!totalOrders || totalOrders === 0) return 0;
     return Math.round(totalRevenue / totalOrders);
   }, [totalRevenue, totalOrders]);
+
+  const maxTypeCount = useMemo(() => {
+    if (!typeStats || typeStats.length === 0) return 1;
+    return Math.max(...typeStats.map((t) => t.count), 1);
+  }, [typeStats]);
 
   const maxBrandCount = useMemo(() => {
     if (!brandStats || brandStats.length === 0) return 1;
@@ -308,11 +313,46 @@ export default function Reports() {
             </div>
           </div>
 
+          {/* Order Types Breakdown */}
+          <div className="glass-card p-5 animate-slide-up" style={{ animationDelay: '150ms' }}>
+            <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              Order Types Breakdown
+            </h3>
+
+            {(!typeStats || typeStats.length === 0) ? (
+              <div className="text-center py-6">
+                <HiShoppingCart className="text-3xl text-white/15 mx-auto mb-2" />
+                <p className="text-sm text-white/30">No orders in this period</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {typeStats.map((item, idx) => (
+                  <div key={item.type} className="animate-fade-in" style={{ animationDelay: `${idx * 80}ms` }}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-sm font-semibold text-white uppercase tracking-wider">{item.type.replace('_', ' ')}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-white/40">{item.count} orders</span>
+                        <span className="text-xs font-semibold text-brand-400">{formatCurrency(item.revenue)}</span>
+                      </div>
+                    </div>
+                    <div className="h-2.5 bg-white/5 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full transition-all duration-700 ease-out"
+                        style={{ width: `${Math.round((item.count / maxTypeCount) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Lens Brand Breakdown */}
           <div className="glass-card p-5 animate-slide-up" style={{ animationDelay: '200ms' }}>
             <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-brand-500" />
-              Popular Lens Brands
+              Popular Lens Brands (Prescriptions)
             </h3>
 
             {(!brandStats || brandStats.length === 0) ? (

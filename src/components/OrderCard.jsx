@@ -107,9 +107,16 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
       <div className="glass-card-light p-4 animate-fade-in">
         {/* Top Row: Order ID + Status */}
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-brand-400 tracking-wide">
-            Order #{order.orderSequenceId}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-bold text-brand-400 tracking-wide">
+              Order #{order.orderSequenceId}
+            </h3>
+            {order.orderType && order.orderType !== 'prescription' && (
+              <span className="text-[10px] uppercase tracking-wider font-bold bg-white/10 text-white/70 px-2 py-0.5 rounded-md">
+                {order.orderType.replace('_', ' ')}
+              </span>
+            )}
+          </div>
           <button
             onClick={handleToggle}
             disabled={order.status === 'Cancelled'}
@@ -133,16 +140,34 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
           <span>{order.customerPhone}</span>
         </div>
 
-        {/* Lens & Coating Details */}
-        <div className="flex items-center gap-2 flex-wrap mb-3">
-          {order.lensBrand && (
-            <span className="text-xs bg-white/5 text-white/50 px-2.5 py-1 rounded-md border border-white/5">
-              {order.lensBrand}
-            </span>
+        {/* Order Details based on Type */}
+        <div className="flex items-center gap-2 flex-wrap mb-3 text-xs text-white/50">
+          {(!order.orderType || order.orderType === 'prescription') && (
+            <>
+              {order.lensBrand && <span className="bg-white/5 px-2.5 py-1 rounded-md border border-white/5">{order.lensBrand}</span>}
+              {order.lensCoating && <span className="bg-white/5 px-2.5 py-1 rounded-md border border-white/5">{order.lensCoating}</span>}
+              {order.frameDetails && <span className="bg-white/5 px-2.5 py-1 rounded-md border border-white/5 truncate max-w-[150px]">{order.frameDetails}</span>}
+            </>
           )}
-          {order.lensCoating && (
-            <span className="text-xs bg-white/5 text-white/50 px-2.5 py-1 rounded-md border border-white/5">
-              {order.lensCoating}
+
+          {order.orderType === 'sunglasses' && (
+            <>
+              {order.sunglassBrand && <span className="bg-white/5 px-2.5 py-1 rounded-md border border-white/5">{order.sunglassBrand}</span>}
+              {order.sunglassModel && <span className="bg-white/5 px-2.5 py-1 rounded-md border border-white/5">{order.sunglassModel}</span>}
+              {order.sunglassColor && <span className="bg-white/5 px-2.5 py-1 rounded-md border border-white/5">{order.sunglassColor}</span>}
+            </>
+          )}
+
+          {order.orderType === 'contact_lenses' && (
+            <>
+              {order.contactBrand && <span className="bg-white/5 px-2.5 py-1 rounded-md border border-white/5">{order.contactBrand}</span>}
+              {order.quantity && <span className="bg-white/5 px-2.5 py-1 rounded-md border border-white/5">{order.quantity}</span>}
+            </>
+          )}
+
+          {order.orderType === 'servicing' && order.serviceDescription && (
+            <span className="bg-white/5 px-2.5 py-1 rounded-md border border-white/5 italic w-full">
+              "{order.serviceDescription}"
             </span>
           )}
         </div>

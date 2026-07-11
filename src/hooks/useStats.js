@@ -95,6 +95,8 @@ export function useStats(period = 'day') {
     // ── Brand stats ──────────────────────────────────────────────────────────
     const brandMap = new Map();
     for (const o of orders) {
+      if (o.orderType && o.orderType !== 'prescription') continue;
+      
       const brand = o.lensBrand || 'Unknown';
       const entry = brandMap.get(brand) || { brand, count: 0, revenue: 0 };
       entry.count += 1;
@@ -108,6 +110,8 @@ export function useStats(period = 'day') {
     // ── Coating stats ────────────────────────────────────────────────────────
     const coatingMap = new Map();
     for (const o of orders) {
+      if (o.orderType && o.orderType !== 'prescription') continue;
+      
       const coating = o.lensCoating || 'None';
       const entry = coatingMap.get(coating) || {
         coating,
@@ -119,6 +123,19 @@ export function useStats(period = 'day') {
       coatingMap.set(coating, entry);
     }
     const coatingStats = Array.from(coatingMap.values()).sort(
+      (a, b) => b.count - a.count,
+    );
+
+    // ── Type stats ───────────────────────────────────────────────────────────
+    const typeMap = new Map();
+    for (const o of orders) {
+      const type = o.orderType || 'prescription';
+      const entry = typeMap.get(type) || { type, count: 0, revenue: 0 };
+      entry.count += 1;
+      entry.revenue += Number(o.totalAmount) || 0;
+      typeMap.set(type, entry);
+    }
+    const typeStats = Array.from(typeMap.values()).sort(
       (a, b) => b.count - a.count,
     );
 
@@ -145,6 +162,7 @@ export function useStats(period = 'day') {
       completedOrders,
       brandStats,
       coatingStats,
+      typeStats,
       dailyRevenue,
     };
   }, [orders]);
