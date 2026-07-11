@@ -172,53 +172,60 @@ export async function searchCustomers(searchQuery) {
   }
 
   const trimmed = searchQuery.trim();
-  const isPhone = /^\d/.test(trimmed) && trimmed.length >= 3;
-
-  if (isPhone) {
-    const normalized = normalizePhone(trimmed);
-    
-    // Try prefix search first
-    let q = query(
-      customersCol,
-      where(documentId(), '>=', normalized),
-      where(documentId(), '<=', normalized + '\uf8ff'),
-      limit(20),
+  const normalized = normalizePhone(trimmed);
+  const lowerQuery = trimmed.toLowerCase();
+  
+  const queries = [];
+  
+  if (normalized.length > 0) {
+    queries.push(
+      getDocs(
+        query(
+          customersCol,
+          where(documentId(), '>=', normalized),
+          where(documentId(), '<=', normalized + '\uf8ff'),
+          limit(20)
+        )
+      )
     );
-
-    let snap = await getDocs(q);
-    
-    // Fallback: try exact document lookup if prefix search returned nothing
-    if (snap.empty && normalized.length >= 7) {
-      const exactRef = doc(customersCol, normalized);
-      const exactSnap = await getDoc(exactRef);
-      if (exactSnap.exists()) {
-        return [{
-          phone: exactSnap.id,
-          ...exactSnap.data(),
-        }];
-      }
-    }
-
-    return snap.docs.map((d) => ({
-      phone: d.id,
-      ...d.data(),
-    }));
-  } else {
-    // Name search – the `name` field is stored in lowercase
-    const lowerQuery = trimmed.toLowerCase();
-    const q = query(
-      customersCol,
-      where('name', '>=', lowerQuery),
-      where('name', '<=', lowerQuery + '\uf8ff'),
-      limit(20),
-    );
-
-    const snap = await getDocs(q);
-    return snap.docs.map((d) => ({
-      phone: d.id,
-      ...d.data(),
-    }));
   }
+  
+  queries.push(
+    getDocs(
+      query(
+        customersCol,
+        where('name', '>=', lowerQuery),
+        where('name', '<=', lowerQuery + '\uf8ff'),
+        limit(20)
+      )
+    )
+  );
+
+  const snaps = await Promise.all(queries);
+  let customerDocs = snaps.flatMap(snap => snap.docs);
+  
+  const uniqueDocs = [];
+  const seen = new Set();
+  for (const docSnap of customerDocs) {
+    if (!seen.has(docSnap.id)) {
+      seen.add(docSnap.id);
+      uniqueDocs.push(docSnap);
+    }
+  }
+
+  // Fallback: try exact document lookup if prefix search returned nothing
+  if (uniqueDocs.length === 0 && normalized.length >= 7) {
+    const exactRef = doc(customersCol, normalized);
+    const exactSnap = await getDoc(exactRef);
+    if (exactSnap.exists()) {
+      uniqueDocs.push(exactSnap);
+    }
+  }
+
+  return uniqueDocs.map((d) => ({
+    phone: d.id,
+    ...d.data(),
+  }));
 }
 
 // ─── getOrdersByCustomerPhone ────────────────────────────────────────────────

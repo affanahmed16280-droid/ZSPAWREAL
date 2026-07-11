@@ -53,44 +53,60 @@ export function useCustomers() {
       const customersCol = collection(db, 'customers');
       const ordersCol = collection(db, 'orders');
 
-      let customerDocs = [];
-      const isPhone = /^\d/.test(trimmed) && trimmed.length >= 3;
-
-      if (isPhone) {
-        const normalized = normalizePhone(trimmed);
-
-        // Phone-prefix search using document-ID range query
-        const customerQuery = query(
-          customersCol,
-          where(documentId(), '>=', normalized),
-          where(documentId(), '<=', normalized + '\uf8ff'),
-          limit(20),
+      const normalized = normalizePhone(trimmed);
+      const lowerQuery = trimmed.toLowerCase();
+      
+      const queries = [];
+      
+      // Phone query
+      if (normalized.length > 0) {
+        queries.push(
+          getDocs(
+            query(
+              customersCol,
+              where(documentId(), '>=', normalized),
+              where(documentId(), '<=', normalized + '\uf8ff'),
+              limit(20)
+            )
+          )
         );
-
-        const customerSnap = await getDocs(customerQuery);
-        customerDocs = customerSnap.docs;
-
-        // Fallback: try exact document lookup if prefix search returned nothing
-        if (customerDocs.length === 0 && normalized.length >= 7) {
-          const exactRef = doc(customersCol, normalized);
-          const exactSnap = await getDoc(exactRef);
-          if (exactSnap.exists()) {
-            customerDocs = [exactSnap];
-          }
-        }
-      } else {
-        // Name-prefix search (lowercase stored in `name` field)
-        const lowerQuery = trimmed.toLowerCase();
-        const customerQuery = query(
-          customersCol,
-          where('name', '>=', lowerQuery),
-          where('name', '<=', lowerQuery + '\uf8ff'),
-          limit(20),
-        );
-
-        const customerSnap = await getDocs(customerQuery);
-        customerDocs = customerSnap.docs;
       }
+      
+      // Name query
+      queries.push(
+        getDocs(
+          query(
+            customersCol,
+            where('name', '>=', lowerQuery),
+            where('name', '<=', lowerQuery + '\uf8ff'),
+            limit(20)
+          )
+        )
+      );
+      
+      const snaps = await Promise.all(queries);
+      let customerDocs = snaps.flatMap(snap => snap.docs);
+      
+      // Deduplicate
+      const uniqueDocs = [];
+      const seen = new Set();
+      for (const doc of customerDocs) {
+        if (!seen.has(doc.id)) {
+          seen.add(doc.id);
+          uniqueDocs.push(doc);
+        }
+      }
+      
+      // Fallback
+      if (uniqueDocs.length === 0 && normalized.length >= 7) {
+        const exactRef = doc(customersCol, normalized);
+        const exactSnap = await getDoc(exactRef);
+        if (exactSnap.exists()) {
+          uniqueDocs.push(exactSnap);
+        }
+      }
+      
+      customerDocs = uniqueDocs;
 
       // For every matching customer, fetch their orders in parallel
       const customers = await Promise.all(
