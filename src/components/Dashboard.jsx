@@ -91,7 +91,7 @@ export default function Dashboard({ setActiveTab }) {
       <div className="animate-fade-in">
         <p className="text-white/50 text-sm font-medium">{getGreeting()}</p>
         <h1 className="text-3xl font-extrabold mt-1 tracking-tight">
-          <span className="bg-gradient-to-r from-brand-400 via-brand-300 to-brand-500 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
             ZS Trading
           </span>
         </h1>
@@ -139,8 +139,8 @@ export default function Dashboard({ setActiveTab }) {
                   onClick={() => openCustomerModal(customer)}
                   className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all duration-200 active:scale-[0.98] text-left min-h-[52px]"
                 >
-                  <div className="w-10 h-10 rounded-full bg-brand-500/15 flex items-center justify-center flex-shrink-0">
-                    <HiUser className="text-brand-400" />
+                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <HiUser className="text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-white truncate">{customer.name}</p>
@@ -163,21 +163,21 @@ export default function Dashboard({ setActiveTab }) {
             icon={HiShoppingCart}
             label="Today's Orders"
             value={statsLoading ? '–' : totalOrders}
-            gradient="bg-gradient-to-br from-blue-500 to-blue-700"
+            gradient="bg-gradient-to-br from-surface-800 to-surface-900 border border-white/10"
             delay="100ms"
           />
           <MetricCard
             icon={HiCurrencyDollar}
             label="Today's Revenue"
             value={statsLoading ? '–' : formatCurrency(totalRevenue)}
-            gradient="bg-gradient-to-br from-emerald-500 to-emerald-700"
+            gradient="bg-gradient-to-br from-surface-800 to-surface-900 border border-white/10"
             delay="200ms"
           />
           <MetricCard
             icon={HiClock}
             label="Pending"
             value={statsLoading ? '–' : pendingOrders}
-            gradient="bg-gradient-to-br from-amber-500 to-orange-600"
+            gradient="bg-gradient-to-br from-surface-800 to-surface-900 border border-white/10"
             delay="300ms"
           />
         </div>
@@ -208,7 +208,7 @@ export default function Dashboard({ setActiveTab }) {
           {recentOrders.length > 0 && (
             <button
               onClick={() => setActiveTab('history')}
-              className="text-xs text-brand-400 font-semibold flex items-center gap-0.5 min-h-[44px] px-2 transition-colors duration-200 hover:text-brand-300"
+              className="text-xs text-white/70 font-semibold flex items-center gap-0.5 min-h-[44px] px-2 transition-colors duration-200 hover:text-white"
             >
               View All <HiChevronRight />
             </button>
@@ -248,8 +248,8 @@ export default function Dashboard({ setActiveTab }) {
             {/* Modal Header */}
             <div className="flex items-center justify-between p-5 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-brand-500/15 flex items-center justify-center">
-                  <HiUser className="text-xl text-brand-400" />
+                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                  <HiUser className="text-xl text-white" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">{selectedCustomer.name}</h3>
@@ -284,52 +284,11 @@ export default function Dashboard({ setActiveTab }) {
               )}
 
               {!modalLoading &&
-                customerOrders.map((order, idx) => {
-                  const isPending = order.status === 'Pending';
-                  return (
-                    <div
-                      key={order.id || idx}
-                      className="glass-card-light p-4 space-y-2 animate-fade-in"
-                      style={{ animationDelay: `${idx * 60}ms` }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-brand-400">
-                          Order #{order.orderSequenceId}
-                        </span>
-                        <span
-                          className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border ${
-                            isPending
-                              ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                              : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                          }`}
-                        >
-                          {isPending ? (
-                            <HiClock className="text-xs" />
-                          ) : (
-                            <HiCheckCircle className="text-xs" />
-                          )}
-                          {order.status}
-                        </span>
-                      </div>
-                      <p className="text-xs text-white/40">{formatDate(order.orderDate)}</p>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {order.lensBrand && (
-                          <span className="text-xs bg-white/5 text-white/50 px-2 py-0.5 rounded">
-                            {order.lensBrand}
-                          </span>
-                        )}
-                        {order.lensCoating && (
-                          <span className="text-xs bg-white/5 text-white/50 px-2 py-0.5 rounded">
-                            {order.lensCoating}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-base font-bold text-white">
-                        {formatCurrency(order.totalAmount)}
-                      </p>
-                    </div>
-                  );
-                })}
+                customerOrders.map((order, idx) => (
+                  <div key={order.id || idx} className="animate-fade-in" style={{ animationDelay: `${idx * 60}ms` }}>
+                    <OrderCard order={order} />
+                  </div>
+                ))}
             </div>
           </div>
         </div>

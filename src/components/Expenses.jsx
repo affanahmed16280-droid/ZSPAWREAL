@@ -24,13 +24,13 @@ const CATEGORIES = [
 ];
 
 const CATEGORY_COLORS = {
-  'Lens Bill': 'from-blue-500 to-blue-700',
-  'Frame/Sunglass Bill': 'from-purple-500 to-purple-700',
-  'Food': 'from-orange-500 to-orange-700',
-  'Staff Salary': 'from-emerald-500 to-emerald-700',
-  'Utilities': 'from-cyan-500 to-cyan-700',
-  'Transport': 'from-amber-500 to-amber-700',
-  'Other': 'from-gray-500 to-gray-700',
+  'Lens Bill': 'from-zinc-600 to-zinc-800',
+  'Frame/Sunglass Bill': 'from-zinc-600 to-zinc-800',
+  'Food': 'from-zinc-600 to-zinc-800',
+  'Staff Salary': 'from-zinc-600 to-zinc-800',
+  'Utilities': 'from-zinc-600 to-zinc-800',
+  'Transport': 'from-zinc-600 to-zinc-800',
+  'Other': 'from-zinc-600 to-zinc-800',
 };
 
 const PERIODS = [
@@ -109,7 +109,7 @@ export default function Expenses() {
       {/* Header */}
       <div className="animate-fade-in">
         <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
-          <HiCurrencyDollar className="text-rose-400" />
+          <HiCurrencyDollar className="text-white" />
           Expenses
         </h1>
         <p className="text-sm text-white/40 mt-1">Track your shop expenses</p>
@@ -135,10 +135,10 @@ export default function Expenses() {
         <button
           onClick={() => setShowAddModal(true)}
           className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold
-            bg-gradient-to-r from-rose-600 to-pink-600 text-white
-            hover:from-rose-500 hover:to-pink-500
+            bg-gradient-to-b from-brand-700 to-brand-900 border border-brand-600 text-white
+            hover:from-brand-600 hover:to-brand-800
             transition-all duration-200 active:scale-[0.97]
-            min-h-[48px] shadow-lg shadow-rose-500/20"
+            min-h-[48px] shadow-lg shadow-black/50"
         >
           <HiPlus className="text-lg" />
           Add Expense
@@ -147,7 +147,7 @@ export default function Expenses() {
 
       {loading && (
         <div className="flex items-center justify-center py-16">
-          <div className="w-8 h-8 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
@@ -156,14 +156,14 @@ export default function Expenses() {
           {/* Summary Cards */}
           <div className="grid grid-cols-2 gap-3 animate-slide-up" style={{ animationDelay: '100ms' }}>
             <div className="glass-card p-4">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-rose-500 to-pink-700 flex items-center justify-center mb-2">
+              <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center mb-2">
                 <HiCurrencyDollar className="text-white text-base" />
               </div>
               <p className="text-2xl font-bold text-white">{formatCurrency(totalExpenses)}</p>
               <p className="text-xs text-white/40 mt-0.5">Total Expenses</p>
             </div>
             <div className="glass-card p-4">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center mb-2">
+              <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center mb-2">
                 <HiCurrencyDollar className="text-white text-base" />
               </div>
               <p className="text-2xl font-bold text-white">{expenseCount}</p>
@@ -175,7 +175,7 @@ export default function Expenses() {
           {categoryStats.length > 0 && (
             <div className="glass-card p-5 animate-slide-up" style={{ animationDelay: '150ms' }}>
               <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-rose-500" />
+                <span className="w-2 h-2 rounded-full bg-white" />
                 By Category
               </h3>
               <div className="space-y-4">
@@ -185,12 +185,12 @@ export default function Expenses() {
                       <span className="text-sm font-semibold text-white">{item.category}</span>
                       <div className="flex items-center gap-3">
                         <span className="text-xs text-white/40">{item.count} entries</span>
-                        <span className="text-xs font-semibold text-rose-400">{formatCurrency(item.total)}</span>
+                        <span className="text-xs font-semibold text-white">{formatCurrency(item.total)}</span>
                       </div>
                     </div>
                     <div className="h-2.5 bg-white/5 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-rose-600 to-pink-400 rounded-full transition-all duration-700 ease-out"
+                        className="h-full bg-white rounded-full transition-all duration-700 ease-out"
                         style={{ width: `${Math.round((item.total / maxCatTotal) * 100)}%` }}
                       />
                     </div>
@@ -203,7 +203,7 @@ export default function Expenses() {
           {/* Recent Expenses List */}
           <div className="space-y-3 animate-slide-up" style={{ animationDelay: '200ms' }}>
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-orange-500" />
+              <span className="w-2 h-2 rounded-full bg-white" />
               Recent Expenses
             </h3>
             {expenses.length === 0 ? (
@@ -302,11 +302,7 @@ export default function Expenses() {
             <button
               onClick={handleSave}
               disabled={saving || !amount}
-              className="w-full py-3.5 rounded-xl text-sm font-bold text-white
-                bg-gradient-to-r from-rose-600 to-pink-600
-                hover:from-rose-500 hover:to-pink-500
-                transition-all duration-200 active:scale-[0.97]
-                disabled:opacity-40 disabled:cursor-not-allowed min-h-[48px]"
+              className="btn-primary w-full py-3.5 rounded-xl text-sm font-bold text-white min-h-[48px]"
             >
               {saving ? 'Saving...' : 'Save Expense'}
             </button>

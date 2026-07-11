@@ -167,5 +167,5 @@ export function useStats(period = 'day') {
     };
   }, [orders]);
 
-  return { ...stats, loading };
+  return { ...stats, orders, loading };
 }

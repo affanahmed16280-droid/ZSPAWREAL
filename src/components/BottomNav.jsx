@@ -27,15 +27,15 @@ export default function BottomNav({ activeTab, setActiveTab }) {
               >
                 <div
                   className={`
-                    w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/30
-                    bg-gradient-to-br from-brand-500 to-brand-700
+                    w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-black/50
+                    bg-gradient-to-b from-surface-700 to-surface-900 border border-surface-600
                     transition-all duration-200 active:scale-90
-                    ${isActive ? 'ring-2 ring-brand-400/50 scale-105' : 'hover:scale-105'}
+                    ${isActive ? 'ring-2 ring-white/50 scale-105' : 'hover:scale-105'}
                   `}
                 >
                   <Icon className="text-2xl text-white" />
                 </div>
-                <span className={`text-[10px] mt-1 font-medium transition-colors duration-200 ${isActive ? 'text-brand-400' : 'text-white/40'}`}>
+                <span className={`text-[10px] mt-1 font-medium transition-colors duration-200 ${isActive ? 'text-white' : 'text-white/40'}`}>
                   {tab.label}
                 </span>
               </button>
@@ -49,12 +49,12 @@ export default function BottomNav({ activeTab, setActiveTab }) {
               className="flex flex-col items-center justify-center min-w-[48px] min-h-[44px] py-1 group transition-all duration-200 active:scale-95"
               aria-label={tab.label}
             >
-              <Icon className={`text-xl transition-colors duration-200 ${isActive ? 'text-brand-400' : 'text-white/40 group-hover:text-white/60'}`} />
-              <span className={`text-[9px] mt-1 font-medium transition-colors duration-200 ${isActive ? 'text-brand-400' : 'text-white/40'}`}>
+              <Icon className={`text-xl transition-colors duration-200 ${isActive ? 'text-white' : 'text-white/40 group-hover:text-white/60'}`} />
+              <span className={`text-[9px] mt-1 font-medium transition-colors duration-200 ${isActive ? 'text-white' : 'text-white/40'}`}>
                 {tab.label}
               </span>
               {isActive && (
-                <span className="w-1 h-1 rounded-full bg-brand-400 mt-0.5 animate-fade-in" />
+                <span className="w-1 h-1 rounded-full bg-white mt-0.5 animate-fade-in" />
               )}
             </button>
           );

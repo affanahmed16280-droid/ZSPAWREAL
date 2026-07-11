@@ -17,21 +17,21 @@ const DELETE_PIN = '62376';
 
 const statusConfig = {
   Pending: {
-    bg: 'bg-amber-500/15',
-    text: 'text-amber-400',
-    border: 'border-amber-500/30',
+    bg: 'bg-white/10',
+    text: 'text-white/70',
+    border: 'border-white/20',
     icon: HiClock,
   },
   Completed: {
-    bg: 'bg-emerald-500/15',
-    text: 'text-emerald-400',
-    border: 'border-emerald-500/30',
+    bg: 'bg-white/15',
+    text: 'text-white',
+    border: 'border-white/30',
     icon: HiCheckCircle,
   },
   Cancelled: {
-    bg: 'bg-red-500/15',
-    text: 'text-red-400',
-    border: 'border-red-500/30',
+    bg: 'bg-white/5',
+    text: 'text-white/40',
+    border: 'border-white/10',
     icon: HiBan,
   },
 };
@@ -108,7 +108,7 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
         {/* Top Row: Order ID + Status */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold text-brand-400 tracking-wide">
+            <h3 className="text-sm font-bold text-white tracking-wide">
               Order #{order.orderSequenceId}
             </h3>
             {order.orderType && order.orderType !== 'prescription' && (
@@ -147,6 +147,32 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
               {order.lensBrand && <span className="bg-white/5 px-2.5 py-1 rounded-md border border-white/5">{order.lensBrand}</span>}
               {order.lensCoating && <span className="bg-white/5 px-2.5 py-1 rounded-md border border-white/5">{order.lensCoating}</span>}
               {order.frameDetails && <span className="bg-white/5 px-2.5 py-1 rounded-md border border-white/5 truncate max-w-[150px]">{order.frameDetails}</span>}
+              {order.pd && <span className="bg-white/5 px-2.5 py-1 rounded-md border border-white/5 font-mono text-[10px]">PD: {order.pd}</span>}
+              
+              {/* Lens Powers Details */}
+              {(order.sphRight || order.cylRight || order.axisRight || order.addRight || order.sphLeft || order.cylLeft || order.axisLeft || order.addLeft) && (
+                <div className="w-full mt-2 bg-black/20 rounded-lg border border-white/5 p-2">
+                  <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-x-2 gap-y-1 text-[10px] font-mono text-white/70">
+                    <div className="font-semibold text-white/40 border-b border-white/5 pb-1">EYE</div>
+                    <div className="font-semibold text-white/40 border-b border-white/5 pb-1 text-center">SPH</div>
+                    <div className="font-semibold text-white/40 border-b border-white/5 pb-1 text-center">CYL</div>
+                    <div className="font-semibold text-white/40 border-b border-white/5 pb-1 text-center">AXIS</div>
+                    <div className="font-semibold text-white/40 border-b border-white/5 pb-1 text-center">ADD</div>
+                    
+                    <div className="font-bold text-white/90">R (OD)</div>
+                    <div className="text-center">{order.sphRight || '-'}</div>
+                    <div className="text-center">{order.cylRight || '-'}</div>
+                    <div className="text-center">{order.axisRight || '-'}</div>
+                    <div className="text-center">{order.addRight || '-'}</div>
+                    
+                    <div className="font-bold text-white/90">L (OS)</div>
+                    <div className="text-center">{order.sphLeft || '-'}</div>
+                    <div className="text-center">{order.cylLeft || '-'}</div>
+                    <div className="text-center">{order.axisLeft || '-'}</div>
+                    <div className="text-center">{order.addLeft || '-'}</div>
+                  </div>
+                </div>
+              )}
             </>
           )}
 
@@ -175,7 +201,7 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
         {/* Bottom Row: Amount + Date */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5 text-white">
-            <HiCurrencyDollar className="text-brand-400" />
+            <HiCurrencyDollar className="text-white/60" />
             <span className="text-lg font-bold">{formatCurrency(order.totalAmount)}</span>
           </div>
           <span className="text-xs text-white/30 font-medium">
@@ -190,8 +216,8 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
               onClick={handleCancel}
               disabled={cancelling}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold
-                bg-orange-500/10 text-orange-400 border border-orange-500/20
-                hover:bg-orange-500/20 transition-all duration-200 active:scale-95
+                bg-white/5 text-white/50 border border-white/10
+                hover:bg-white/10 transition-all duration-200 active:scale-95
                 disabled:opacity-50 min-h-[36px]"
             >
               <HiBan className="text-sm" />
@@ -201,8 +227,8 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
           <button
             onClick={handleDeleteClick}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold
-              bg-red-500/10 text-red-400 border border-red-500/20
-              hover:bg-red-500/20 transition-all duration-200 active:scale-95 min-h-[36px]"
+              bg-white/5 text-white/40 border border-white/10
+              hover:bg-white/10 transition-all duration-200 active:scale-95 min-h-[36px]"
           >
             <HiTrash className="text-sm" />
             Delete
