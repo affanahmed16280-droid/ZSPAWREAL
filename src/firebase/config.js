@@ -68,6 +68,7 @@ const countersDoc = doc(db, 'metadata', 'counters');
 //   3. Create the order document with the new sequential ID.
 //   4. Return an object with the sequential ID.
 export async function createOrder({
+  orderType,
   customerPhone,
   customerName,
   sphRight,
@@ -82,6 +83,12 @@ export async function createOrder({
   lensBrand,
   lensCoating,
   frameDetails,
+  sunglassBrand,
+  sunglassModel,
+  sunglassColor,
+  contactBrand,
+  quantity,
+  serviceDescription,
   totalAmount,
 }) {
   // Normalize phone for consistent document IDs
@@ -120,6 +127,7 @@ export async function createOrder({
     // 3. Create the order document inside the same transaction ----------------
     const orderRef = doc(ordersCol);
     transaction.set(orderRef, {
+      orderType: orderType || 'prescription',
       orderSequenceId: nextId,
       customerPhone: phone,
       customerName: customerName || '',
@@ -135,6 +143,12 @@ export async function createOrder({
       lensBrand: lensBrand ?? '',
       lensCoating: lensCoating ?? '',
       frameDetails: frameDetails ?? '',
+      sunglassBrand: sunglassBrand ?? '',
+      sunglassModel: sunglassModel ?? '',
+      sunglassColor: sunglassColor ?? '',
+      contactBrand: contactBrand ?? '',
+      quantity: quantity ?? '',
+      serviceDescription: serviceDescription ?? '',
       totalAmount: Number(totalAmount) || 0,
       orderDate: Timestamp.now(),
       status: 'Pending',
@@ -233,13 +247,19 @@ export async function getOrdersByCustomerPhone(phone) {
   const normalized = normalizePhone(phone);
   const q = query(
     ordersCol,
-    where('customerPhone', '==', normalized),
-    orderBy('orderDate', 'desc'),
+    where('customerPhone', '==', normalized)
   );
 
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({
+  const orders = snap.docs.map((d) => ({
     id: d.id,
     ...d.data(),
   }));
+  
+  // Sort by orderDate descending in memory to avoid needing a composite index
+  return orders.sort((a, b) => {
+    const timeA = a.orderDate?.toMillis ? a.orderDate.toMillis() : new Date(a.orderDate).getTime();
+    const timeB = b.orderDate?.toMillis ? b.orderDate.toMillis() : new Date(b.orderDate).getTime();
+    return timeB - timeA;
+  });
 }

@@ -116,15 +116,18 @@ export function useCustomers() {
 
           const ordersQuery = query(
             ordersCol,
-            where('customerPhone', '==', phone),
-            orderBy('orderDate', 'desc'),
+            where('customerPhone', '==', phone)
           );
 
           const ordersSnap = await getDocs(ordersQuery);
           const orders = ordersSnap.docs.map((od) => ({
             id: od.id,
             ...od.data(),
-          }));
+          })).sort((a, b) => {
+            const timeA = a.orderDate?.toMillis ? a.orderDate.toMillis() : new Date(a.orderDate).getTime();
+            const timeB = b.orderDate?.toMillis ? b.orderDate.toMillis() : new Date(b.orderDate).getTime();
+            return timeB - timeA;
+          });
 
           return {
             phone,
