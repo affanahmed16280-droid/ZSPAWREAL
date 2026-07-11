@@ -24,13 +24,13 @@ const CATEGORIES = [
 ];
 
 const CATEGORY_COLORS = {
-  'Lens Bill': 'from-zinc-600 to-zinc-800',
-  'Frame/Sunglass Bill': 'from-zinc-600 to-zinc-800',
-  'Food': 'from-zinc-600 to-zinc-800',
-  'Staff Salary': 'from-zinc-600 to-zinc-800',
-  'Utilities': 'from-zinc-600 to-zinc-800',
-  'Transport': 'from-zinc-600 to-zinc-800',
-  'Other': 'from-zinc-600 to-zinc-800',
+  'Lens Bill': 'from-accent-gold to-brand-700',
+  'Frame/Sunglass Bill': 'from-accent-champagne to-brand-600',
+  'Food': 'from-brand-400 to-brand-600',
+  'Staff Salary': 'from-accent-gold to-brand-800',
+  'Utilities': 'from-brand-500 to-brand-700',
+  'Transport': 'from-brand-300 to-brand-500',
+  'Other': 'from-surface-700 to-surface-800',
 };
 
 const PERIODS = [
@@ -109,7 +109,7 @@ export default function Expenses() {
       {/* Header */}
       <div className="animate-fade-in">
         <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
-          <HiCurrencyDollar className="text-white" />
+          <HiCurrencyDollar className="text-accent-gold" />
           Expenses
         </h1>
         <p className="text-sm text-white/40 mt-1">Track your shop expenses</p>
@@ -135,10 +135,10 @@ export default function Expenses() {
         <button
           onClick={() => setShowAddModal(true)}
           className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold
-            bg-gradient-to-b from-brand-700 to-brand-900 border border-brand-600 text-white
-            hover:from-brand-600 hover:to-brand-800
+            bg-gradient-to-r from-brand-600 to-brand-400 border border-brand-300/30 text-white
+            hover:from-brand-500 hover:to-brand-300
             transition-all duration-200 active:scale-[0.97]
-            min-h-[48px] shadow-lg shadow-black/50"
+            min-h-[48px] shadow-lg shadow-brand-500/20"
         >
           <HiPlus className="text-lg" />
           Add Expense
@@ -147,7 +147,7 @@ export default function Expenses() {
 
       {loading && (
         <div className="flex items-center justify-center py-16">
-          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-accent-gold border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
@@ -156,15 +156,15 @@ export default function Expenses() {
           {/* Summary Cards */}
           <div className="grid grid-cols-2 gap-3 animate-slide-up" style={{ animationDelay: '100ms' }}>
             <div className="glass-card p-4">
-              <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center mb-2">
-                <HiCurrencyDollar className="text-white text-base" />
+              <div className="w-9 h-9 rounded-lg bg-accent-gold/15 flex items-center justify-center mb-2">
+                <HiCurrencyDollar className="text-accent-gold text-base" />
               </div>
               <p className="text-2xl font-bold text-white">{formatCurrency(totalExpenses)}</p>
               <p className="text-xs text-white/40 mt-0.5">Total Expenses</p>
             </div>
             <div className="glass-card p-4">
-              <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center mb-2">
-                <HiCurrencyDollar className="text-white text-base" />
+              <div className="w-9 h-9 rounded-lg bg-accent-gold/15 flex items-center justify-center mb-2">
+                <HiCurrencyDollar className="text-accent-gold text-base" />
               </div>
               <p className="text-2xl font-bold text-white">{expenseCount}</p>
               <p className="text-xs text-white/40 mt-0.5">Entries</p>
@@ -175,7 +175,7 @@ export default function Expenses() {
           {categoryStats.length > 0 && (
             <div className="glass-card p-5 animate-slide-up" style={{ animationDelay: '150ms' }}>
               <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-white" />
+                <span className="w-2 h-2 rounded-full bg-accent-gold" />
                 By Category
               </h3>
               <div className="space-y-4">
@@ -185,12 +185,12 @@ export default function Expenses() {
                       <span className="text-sm font-semibold text-white">{item.category}</span>
                       <div className="flex items-center gap-3">
                         <span className="text-xs text-white/40">{item.count} entries</span>
-                        <span className="text-xs font-semibold text-white">{formatCurrency(item.total)}</span>
+                        <span className="text-xs font-semibold text-accent-gold">{formatCurrency(item.total)}</span>
                       </div>
                     </div>
                     <div className="h-2.5 bg-white/5 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-white rounded-full transition-all duration-700 ease-out"
+                        className={`h-full bg-gradient-to-r ${CATEGORY_COLORS[item.category] || CATEGORY_COLORS['Other']} rounded-full transition-all duration-700 ease-out`}
                         style={{ width: `${Math.round((item.total / maxCatTotal) * 100)}%` }}
                       />
                     </div>
@@ -203,7 +203,7 @@ export default function Expenses() {
           {/* Recent Expenses List */}
           <div className="space-y-3 animate-slide-up" style={{ animationDelay: '200ms' }}>
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-white" />
+              <span className="w-2 h-2 rounded-full bg-accent-gold" />
               Recent Expenses
             </h3>
             {expenses.length === 0 ? (

@@ -204,7 +204,7 @@ export default function Reports() {
       {/* Header */}
       <div className="animate-fade-in">
         <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
-          <HiChartBar className="text-white" />
+          <HiChartBar className="text-accent-gold" />
           Sales Reports
         </h1>
         <p className="text-sm text-white/40 mt-1">Track your shop's performance</p>
@@ -240,15 +240,15 @@ export default function Reports() {
               onClick={handleDownloadPdf}
               disabled={generatingPdf || totalOrders === 0}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold
-                bg-gradient-to-b from-brand-700 to-brand-900 border border-brand-600 text-white
-                hover:from-brand-600 hover:to-brand-800
+                bg-gradient-to-r from-brand-600 to-brand-400 border border-brand-300/30 text-white
+                hover:from-brand-500 hover:to-brand-300
                 transition-all duration-200 active:scale-[0.97]
                 disabled:opacity-40 disabled:cursor-not-allowed min-h-[48px]
-                shadow-lg shadow-black/50"
+                shadow-lg shadow-brand-500/20"
             >
               {generatingPdf ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-accent-gold border-t-transparent rounded-full animate-spin" />
                   Generating PDF...
                 </>
               ) : (
@@ -264,20 +264,20 @@ export default function Reports() {
           <div className="grid grid-cols-2 gap-3 animate-slide-up" style={{ animationDelay: '100ms' }}>
             {/* Total Revenue - Full Width Highlight */}
             <div className="col-span-2 glass-card p-5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/5 to-transparent rounded-bl-full" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-accent-gold/10 to-transparent rounded-bl-full" />
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                  <HiCurrencyDollar className="text-white text-xl" />
+                <div className="w-10 h-10 rounded-xl bg-accent-gold/15 flex items-center justify-center">
+                  <HiCurrencyDollar className="text-accent-gold text-xl" />
                 </div>
-                <span className="text-xs text-white/50 font-medium uppercase tracking-wider">Total Revenue</span>
+                <span className="text-xs text-accent-gold font-medium uppercase tracking-wider">Total Revenue</span>
               </div>
-              <p className="text-3xl font-extrabold text-white">
+              <p className="text-3xl font-extrabold bg-gradient-to-r from-accent-gold via-accent-champagne to-brand-400 bg-clip-text text-transparent">
                 {formatCurrency(totalRevenue)}
               </p>
               {avgOrderValue > 0 && (
                 <div className="flex items-center gap-1 mt-2">
-                  <HiTrendingUp className="text-white/60 text-sm" />
-                  <span className="text-xs text-white/60 font-medium">
+                  <HiTrendingUp className="text-brand-300 text-sm" />
+                  <span className="text-xs text-brand-300 font-medium">
                     {formatCurrency(avgOrderValue)} avg per order
                   </span>
                 </div>
@@ -286,8 +286,8 @@ export default function Reports() {
 
             {/* Total Orders */}
             <div className="glass-card p-4">
-              <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center mb-2">
-                <HiShoppingCart className="text-white text-base" />
+              <div className="w-9 h-9 rounded-lg bg-accent-gold/15 flex items-center justify-center mb-2">
+                <HiShoppingCart className="text-accent-gold text-base" />
               </div>
               <p className="text-2xl font-bold text-white">{totalOrders}</p>
               <p className="text-xs text-white/40 mt-0.5">Total Orders</p>
@@ -295,8 +295,8 @@ export default function Reports() {
 
             {/* Completed Orders */}
             <div className="glass-card p-4">
-              <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center mb-2">
-                <HiCheckCircle className="text-white text-base" />
+              <div className="w-9 h-9 rounded-lg bg-accent-gold/15 flex items-center justify-center mb-2">
+                <HiCheckCircle className="text-accent-gold text-base" />
               </div>
               <p className="text-2xl font-bold text-white">{completedOrders}</p>
               <p className="text-xs text-white/40 mt-0.5">Completed</p>
@@ -304,8 +304,8 @@ export default function Reports() {
 
             {/* Pending Orders */}
             <div className="glass-card p-4">
-              <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center mb-2">
-                <HiClock className="text-white text-base" />
+              <div className="w-9 h-9 rounded-lg bg-accent-gold/15 flex items-center justify-center mb-2">
+                <HiClock className="text-accent-gold text-base" />
               </div>
               <p className="text-2xl font-bold text-white">{pendingOrders}</p>
               <p className="text-xs text-white/40 mt-0.5">Pending</p>
@@ -313,8 +313,8 @@ export default function Reports() {
 
             {/* Avg Order Value */}
             <div className="glass-card p-4">
-              <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center mb-2">
-                <HiTrendingUp className="text-white text-base" />
+              <div className="w-9 h-9 rounded-lg bg-accent-gold/15 flex items-center justify-center mb-2">
+                <HiTrendingUp className="text-accent-gold text-base" />
               </div>
               <p className="text-2xl font-bold text-white">{formatCurrency(avgOrderValue)}</p>
               <p className="text-xs text-white/40 mt-0.5">Avg Value</p>
@@ -324,7 +324,7 @@ export default function Reports() {
           {/* Order Types Breakdown */}
           <div className="glass-card p-5 animate-slide-up" style={{ animationDelay: '150ms' }}>
             <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-white" />
+              <span className="w-2 h-2 rounded-full bg-accent-gold" />
               Order Types Breakdown
             </h3>
 
@@ -346,7 +346,7 @@ export default function Reports() {
                     </div>
                     <div className="h-2.5 bg-white/5 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-white rounded-full transition-all duration-700 ease-out"
+                        className="h-full bg-gradient-to-r from-accent-gold to-brand-500 rounded-full transition-all duration-700 ease-out"
                         style={{ width: `${Math.round((item.count / maxTypeCount) * 100)}%` }}
                       />
                     </div>
@@ -359,7 +359,7 @@ export default function Reports() {
           {/* Lens Brand Breakdown */}
           <div className="glass-card p-5 animate-slide-up" style={{ animationDelay: '200ms' }}>
             <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-white/60" />
+              <span className="w-2 h-2 rounded-full bg-accent-champagne" />
               Popular Lens Brands (Prescriptions)
             </h3>
 
@@ -381,7 +381,7 @@ export default function Reports() {
                     </div>
                     <div className="h-2.5 bg-white/5 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-white/70 rounded-full transition-all duration-700 ease-out"
+                        className="h-full bg-gradient-to-r from-accent-champagne to-accent-gold rounded-full transition-all duration-700 ease-out"
                         style={{ width: `${Math.round((item.count / maxBrandCount) * 100)}%` }}
                       />
                     </div>
@@ -394,7 +394,7 @@ export default function Reports() {
           {/* Coating Breakdown */}
           <div className="glass-card p-5 animate-slide-up" style={{ animationDelay: '300ms' }}>
             <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-white/40" />
+              <span className="w-2 h-2 rounded-full bg-brand-400" />
               Coating Distribution
             </h3>
 
@@ -416,7 +416,7 @@ export default function Reports() {
                     </div>
                     <div className="h-2.5 bg-white/5 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-white/50 rounded-full transition-all duration-700 ease-out"
+                        className="h-full bg-gradient-to-r from-brand-400 to-brand-600 rounded-full transition-all duration-700 ease-out"
                         style={{ width: `${Math.round((item.count / maxCoatingCount) * 100)}%` }}
                       />
                     </div>

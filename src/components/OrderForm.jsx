@@ -35,7 +35,7 @@ const initialForm = {
 const PrescriptionGrid = ({ eye, prefix, label, form, set }) => (
   <div className="glass-card p-4 space-y-3">
     <div className="flex items-center gap-2">
-      <HiEye className="text-white" />
+      <HiEye className="text-accent-gold" />
       <h3 className="text-sm font-semibold text-white">{label}</h3>
       <span className="text-xs text-white/30 ml-auto">{eye}</span>
     </div>
@@ -164,8 +164,8 @@ export default function OrderForm() {
   return (
     <div className="px-4 py-6">
       <div className="flex items-center gap-3 mb-6 animate-fade-in">
-        <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center">
-          <HiEye className="text-xl text-white" />
+        <div className="w-10 h-10 rounded-xl bg-accent-gold/15 border border-accent-gold/20 flex items-center justify-center">
+          <HiEye className="text-xl text-accent-gold" />
         </div>
         <div>
           <h1 className="text-xl font-bold text-white">New Order</h1>
@@ -204,7 +204,7 @@ export default function OrderForm() {
         {/* Customer Info */}
         <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '50ms' }}>
           <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-            <HiUser className="text-white" />
+            <HiUser className="text-accent-gold" />
             Customer Information
           </h3>
           <div className="relative">
@@ -359,7 +359,7 @@ export default function OrderForm() {
         {/* Total Amount */}
         <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '400ms' }}>
           <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-            <HiCurrencyDollar className="text-white" />
+            <HiCurrencyDollar className="text-accent-gold" />
             Total Amount
           </h3>
           <div className="relative">

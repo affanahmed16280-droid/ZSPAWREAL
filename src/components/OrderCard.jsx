@@ -17,19 +17,19 @@ const DELETE_PIN = '62376';
 
 const statusConfig = {
   Pending: {
-    bg: 'bg-white/10',
-    text: 'text-white/70',
-    border: 'border-white/20',
+    bg: 'bg-accent-gold/15',
+    text: 'text-accent-gold',
+    border: 'border-accent-gold/30',
     icon: HiClock,
   },
   Completed: {
-    bg: 'bg-white/15',
-    text: 'text-white',
-    border: 'border-white/30',
+    bg: 'bg-accent-champagne/15',
+    text: 'text-accent-champagne',
+    border: 'border-accent-champagne/30',
     icon: HiCheckCircle,
   },
   Cancelled: {
-    bg: 'bg-white/5',
+    bg: 'bg-surface-700',
     text: 'text-white/40',
     border: 'border-white/10',
     icon: HiBan,
@@ -108,7 +108,7 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
         {/* Top Row: Order ID + Status */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold text-white tracking-wide">
+            <h3 className="text-sm font-bold text-accent-gold tracking-wide">
               Order #{order.orderSequenceId}
             </h3>
             {order.orderType && order.orderType !== 'prescription' && (
@@ -201,7 +201,7 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
         {/* Bottom Row: Amount + Date */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5 text-white">
-            <HiCurrencyDollar className="text-white/60" />
+            <HiCurrencyDollar className="text-accent-gold" />
             <span className="text-lg font-bold">{formatCurrency(order.totalAmount)}</span>
           </div>
           <span className="text-xs text-white/30 font-medium">

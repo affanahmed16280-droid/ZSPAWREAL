@@ -91,7 +91,7 @@ export default function Dashboard({ setActiveTab }) {
       <div className="animate-fade-in">
         <p className="text-white/50 text-sm font-medium">{getGreeting()}</p>
         <h1 className="text-3xl font-extrabold mt-1 tracking-tight">
-          <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-accent-gold via-accent-champagne to-brand-500 bg-clip-text text-transparent">
             ZS Trading
           </span>
         </h1>
@@ -139,8 +139,8 @@ export default function Dashboard({ setActiveTab }) {
                   onClick={() => openCustomerModal(customer)}
                   className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all duration-200 active:scale-[0.98] text-left min-h-[52px]"
                 >
-                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
-                    <HiUser className="text-white" />
+                  <div className="w-10 h-10 rounded-full bg-accent-gold/15 flex items-center justify-center flex-shrink-0">
+                    <HiUser className="text-accent-gold" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-white truncate">{customer.name}</p>
@@ -163,21 +163,21 @@ export default function Dashboard({ setActiveTab }) {
             icon={HiShoppingCart}
             label="Today's Orders"
             value={statsLoading ? '–' : totalOrders}
-            gradient="bg-gradient-to-br from-surface-800 to-surface-900 border border-white/10"
+            gradient="bg-gradient-to-br from-brand-700 to-brand-900 border border-brand-500/20"
             delay="100ms"
           />
           <MetricCard
             icon={HiCurrencyDollar}
             label="Today's Revenue"
             value={statsLoading ? '–' : formatCurrency(totalRevenue)}
-            gradient="bg-gradient-to-br from-surface-800 to-surface-900 border border-white/10"
+            gradient="bg-gradient-to-br from-brand-700 to-brand-900 border border-brand-500/20"
             delay="200ms"
           />
           <MetricCard
             icon={HiClock}
             label="Pending"
             value={statsLoading ? '–' : pendingOrders}
-            gradient="bg-gradient-to-br from-surface-800 to-surface-900 border border-white/10"
+            gradient="bg-gradient-to-br from-brand-700 to-brand-900 border border-brand-500/20"
             delay="300ms"
           />
         </div>
@@ -208,7 +208,7 @@ export default function Dashboard({ setActiveTab }) {
           {recentOrders.length > 0 && (
             <button
               onClick={() => setActiveTab('history')}
-              className="text-xs text-white/70 font-semibold flex items-center gap-0.5 min-h-[44px] px-2 transition-colors duration-200 hover:text-white"
+              className="text-xs text-accent-gold font-semibold flex items-center gap-0.5 min-h-[44px] px-2 transition-colors duration-200 hover:text-accent-champagne"
             >
               View All <HiChevronRight />
             </button>
@@ -248,8 +248,8 @@ export default function Dashboard({ setActiveTab }) {
             {/* Modal Header */}
             <div className="flex items-center justify-between p-5 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                  <HiUser className="text-xl text-white" />
+                <div className="w-12 h-12 rounded-full bg-accent-gold/15 flex items-center justify-center">
+                  <HiUser className="text-xl text-accent-gold" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">{selectedCustomer.name}</h3>

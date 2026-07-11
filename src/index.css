@@ -22,25 +22,25 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl;
+    @apply bg-surface-900/80 backdrop-blur-xl border border-accent-gold/20 rounded-2xl shadow-lg shadow-black/40;
   }
   .glass-card-light {
-    @apply bg-surface-800/60 backdrop-blur-xl border border-white/5 rounded-2xl;
+    @apply bg-surface-800/80 backdrop-blur-xl border border-white/5 rounded-2xl;
   }
   .input-field {
-    @apply w-full px-4 py-3.5 bg-surface-800/80 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all duration-200;
+    @apply w-full px-4 py-3.5 bg-surface-950 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-accent-gold/40 focus:border-accent-gold/40 transition-all duration-200;
   }
   .btn-primary {
-    @apply w-full py-4 bg-gradient-to-b from-brand-700 to-brand-900 border border-brand-600 text-white font-semibold rounded-xl active:scale-[0.98] transition-all duration-200 shadow-lg shadow-black/50 disabled:opacity-50 disabled:active:scale-100;
+    @apply w-full py-4 bg-gradient-to-r from-brand-600 to-brand-400 border border-brand-300/30 text-white font-bold rounded-xl active:scale-[0.98] transition-all duration-200 shadow-lg shadow-brand-500/20 disabled:opacity-50 disabled:active:scale-100;
   }
   .chip {
     @apply px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border;
   }
   .chip-active {
-    @apply bg-white/15 border-white/30 text-white;
+    @apply bg-accent-gold/15 border-accent-gold/40 text-accent-gold shadow-inner shadow-accent-gold/10;
   }
   .chip-inactive {
-    @apply bg-surface-800/50 border-white/10 text-white/50 active:bg-surface-700/50;
+    @apply bg-surface-900 border-white/10 text-white/50 hover:text-white/80 active:bg-surface-800;
   }
 }
 
