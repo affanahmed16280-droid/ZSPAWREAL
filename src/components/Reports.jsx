@@ -11,6 +11,8 @@ import {
 import { useStats } from '../hooks/useStats';
 import { formatCurrency } from '../utils/helpers';
 import toast from 'react-hot-toast';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const PERIODS = [
   { key: 'day', label: 'Today' },
@@ -71,10 +73,6 @@ export default function Reports() {
   const handleDownloadPdf = async () => {
     setGeneratingPdf(true);
     try {
-      // Dynamic imports to ensure jspdf-autotable properly extends jsPDF
-      const { default: jsPDF } = await import('jspdf');
-      await import('jspdf-autotable');
-
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
       const periodLabel = getPeriodLabel(period);
@@ -106,7 +104,7 @@ export default function Reports() {
       doc.text('Summary', 14, y);
       y += 2;
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: y,
         head: [['Metric', 'Value']],
         body: [
@@ -131,7 +129,7 @@ export default function Reports() {
         doc.text('Lens Brand Breakdown', 14, y);
         y += 2;
 
-        doc.autoTable({
+        autoTable(doc, {
           startY: y,
           head: [['Brand', 'Orders', 'Revenue']],
           body: brandStats.map((b) => [b.brand, String(b.count), formatCurrency(b.revenue)]),
@@ -156,7 +154,7 @@ export default function Reports() {
         doc.text('Coating Distribution', 14, y);
         y += 2;
 
-        doc.autoTable({
+        autoTable(doc, {
           startY: y,
           head: [['Coating', 'Orders', 'Revenue']],
           body: coatingStats.map((c) => [c.coating, String(c.count), formatCurrency(c.revenue)]),
