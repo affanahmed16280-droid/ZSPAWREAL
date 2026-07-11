@@ -20,7 +20,7 @@ import OrderCard from './OrderCard';
 
 export default function Dashboard({ setActiveTab }) {
   const { orders, loading: ordersLoading } = useOrders();
-  const { results, loading: searchLoading, error: searchError, searchCustomers } = useCustomers();
+  const { results, loading: searchLoading, searchCustomers } = useCustomers();
   const { totalOrders, totalRevenue, pendingOrders, loading: statsLoading } = useStats('day');
 
   const [query, setQuery] = useState('');
@@ -129,12 +129,7 @@ export default function Dashboard({ setActiveTab }) {
                 <div className="w-5 h-5 border-2 border-brand-400 border-t-transparent rounded-full animate-spin" />
               </div>
             )}
-            {!searchLoading && searchError && (
-              <p className="text-center text-red-400 text-xs py-4 px-3">
-                Search failed: {searchError.code || searchError.message || 'unknown error'}
-              </p>
-            )}
-            {!searchLoading && !searchError && results.length === 0 && (
+            {!searchLoading && results.length === 0 && (
               <p className="text-center text-white/40 text-sm py-4">No customers found</p>
             )}
             {!searchLoading &&

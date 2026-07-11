@@ -6,12 +6,9 @@ import {
   HiCheckCircle,
   HiClock,
   HiTrendingUp,
-  HiRefresh,
 } from 'react-icons/hi';
 import { useStats } from '../hooks/useStats';
 import { formatCurrency } from '../utils/helpers';
-import { backfillMissingCustomers } from '../firebase/config';
-import toast from 'react-hot-toast';
 
 const PERIODS = [
   { key: 'day', label: 'Today' },
@@ -21,24 +18,7 @@ const PERIODS = [
 
 export default function Reports() {
   const [period, setPeriod] = useState('day');
-  const [repairing, setRepairing] = useState(false);
   const { totalOrders, totalRevenue, pendingOrders, completedOrders, brandStats, coatingStats, loading } = useStats(period);
-
-  const handleRepairCustomers = async () => {
-    setRepairing(true);
-    try {
-      const { scanned, created } = await backfillMissingCustomers();
-      if (created > 0) {
-        toast.success(`Fixed ${created} customer${created === 1 ? '' : 's'} that weren't showing up in search.`, { duration: 4000 });
-      } else {
-        toast.success(`Checked ${scanned} customer${scanned === 1 ? '' : 's'} — everything already matched up.`, { duration: 4000 });
-      }
-    } catch (err) {
-      toast.error(err.message || 'Repair failed');
-    } finally {
-      setRepairing(false);
-    }
-  };
 
   const avgOrderValue = useMemo(() => {
     if (!totalOrders || totalOrders === 0) return 0;
@@ -219,34 +199,6 @@ export default function Reports() {
                 ))}
               </div>
             )}
-          </div>
-
-          {/* Repair Customer Search */}
-          <div className="glass-card p-5 animate-slide-up" style={{ animationDelay: '350ms' }}>
-            <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2">
-              <HiRefresh className="text-brand-400" />
-              Fix Customer Search
-            </h3>
-            <p className="text-xs text-white/40 mb-3">
-              If a customer's name shows on an order but doesn't turn up in search, tap this to rebuild any missing customer records from your orders.
-            </p>
-            <button
-              onClick={handleRepairCustomers}
-              disabled={repairing}
-              className="glass-card-light w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white/80 hover:text-white min-h-[44px] transition-all duration-200 active:scale-95 border border-white/10 disabled:opacity-50"
-            >
-              {repairing ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Checking orders...
-                </>
-              ) : (
-                <>
-                  <HiRefresh className="text-base" />
-                  Repair Customer Records
-                </>
-              )}
-            </button>
           </div>
         </>
       )}

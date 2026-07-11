@@ -8,7 +8,6 @@ import {
   limit,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { normalizeName } from '../utils/helpers';
 
 /**
  * useCustomers — search customers by phone prefix or name prefix.
@@ -29,7 +28,6 @@ import { normalizeName } from '../utils/helpers';
 export function useCustomers() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const searchCustomers = useCallback(async (queryStr) => {
     // Empty query → clear results immediately
@@ -40,7 +38,6 @@ export function useCustomers() {
 
     const trimmed = queryStr.trim();
     setLoading(true);
-    setError(null);
 
     try {
       const customersCol = collection(db, 'customers');
@@ -59,7 +56,7 @@ export function useCustomers() {
         );
       } else {
         // Name-prefix search (lowercase stored in `name` field)
-        const lowerQuery = normalizeName(trimmed).toLowerCase();
+        const lowerQuery = trimmed.toLowerCase();
         customerQuery = query(
           customersCol,
           where('name', '>=', lowerQuery),
@@ -100,12 +97,11 @@ export function useCustomers() {
       setResults(customers);
     } catch (err) {
       console.error('[useCustomers] search error:', err);
-      setError(err);
       setResults([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  return { results, loading, error, searchCustomers };
+  return { results, loading, searchCustomers };
 }

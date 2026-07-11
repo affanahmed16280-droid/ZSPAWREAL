@@ -19,7 +19,6 @@ import {
   startAt,
   endAt,
 } from 'firebase/firestore';
-import { normalizeName } from '../utils/helpers';
 
 // ─── Firebase Configuration ──────────────────────────────────────────────────
 // Replace every value below with your own Firebase project credentials.
@@ -79,10 +78,9 @@ export async function createOrder({
   const customerSnap = await getDoc(customerRef);
 
   if (!customerSnap.exists()) {
-    const cleanName = normalizeName(customerName);
     await setDoc(customerRef, {
-      name: cleanName.toLowerCase(),
-      displayName: cleanName,
+      name: customerName.toLowerCase(),
+      displayName: customerName,
       createdAt: Timestamp.now(),
     });
   }
@@ -165,7 +163,7 @@ export async function searchCustomers(searchQuery) {
     );
   } else {
     // Name search – the `name` field is stored in lowercase
-    const lowerQuery = normalizeName(trimmed).toLowerCase();
+    const lowerQuery = trimmed.toLowerCase();
     q = query(
       customersCol,
       where('name', '>=', lowerQuery),
@@ -179,45 +177,6 @@ export async function searchCustomers(searchQuery) {
     phone: d.id,
     ...d.data(),
   }));
-}
-
-// ─── backfillMissingCustomers ────────────────────────────────────────────────
-// One-time repair: scans every order and makes sure a matching
-// customers/{phone} document exists for it. This fixes customers that
-// ended up "orphaned" — visible on an order, but missing from the
-// customers collection (e.g. an order that was added by hand in the
-// Firebase console, or created before the customer-record write was
-// in place) — which is what makes search report "No customers found"
-// for a name that clearly exists on an order.
-export async function backfillMissingCustomers() {
-  const ordersSnap = await getDocs(query(ordersCol, orderBy('orderDate', 'desc')));
-
-  // Keep the most recent name seen for each phone number.
-  const latestByPhone = new Map();
-  ordersSnap.docs.forEach((d) => {
-    const data = d.data();
-    if (!data.customerPhone) return;
-    if (!latestByPhone.has(data.customerPhone)) {
-      latestByPhone.set(data.customerPhone, data.customerName || '');
-    }
-  });
-
-  let created = 0;
-  for (const [phone, name] of latestByPhone.entries()) {
-    const ref = doc(customersCol, phone);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) {
-      const cleanName = normalizeName(name);
-      await setDoc(ref, {
-        name: cleanName.toLowerCase(),
-        displayName: cleanName,
-        createdAt: Timestamp.now(),
-      });
-      created += 1;
-    }
-  }
-
-  return { scanned: latestByPhone.size, created };
 }
 
 // ─── getOrdersByCustomerPhone ────────────────────────────────────────────────
