@@ -8,6 +8,7 @@ import {
   orderBy,
   getDocs,
   limit,
+  documentId
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
@@ -61,8 +62,8 @@ export function useCustomers() {
         // Phone-prefix search using document-ID range query
         const customerQuery = query(
           customersCol,
-          where('__name__', '>=', normalized),
-          where('__name__', '<=', normalized + '\uf8ff'),
+          where(documentId(), '>=', normalized),
+          where(documentId(), '<=', normalized + '\uf8ff'),
           limit(20),
         );
 

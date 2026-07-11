@@ -10,6 +10,9 @@ import {
 } from 'react-icons/hi';
 import { useStats } from '../hooks/useStats';
 import { formatCurrency } from '../utils/helpers';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import toast from 'react-hot-toast';
 
 const PERIODS = [
   { key: 'day', label: 'Today' },
@@ -65,9 +68,6 @@ export default function Reports() {
   const handleDownloadPdf = async () => {
     setGeneratingPdf(true);
     try {
-      const { default: jsPDF } = await import('jspdf');
-      await import('jspdf-autotable');
-
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
       const periodLabel = getPeriodLabel(period);
@@ -180,7 +180,6 @@ export default function Reports() {
       doc.save(fileName);
     } catch (err) {
       console.error('PDF generation error:', err);
-      const { default: toast } = await import('react-hot-toast');
       toast.error('Failed to generate PDF');
     } finally {
       setGeneratingPdf(false);

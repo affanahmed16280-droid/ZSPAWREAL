@@ -19,6 +19,7 @@ import {
   Timestamp,
   startAt,
   endAt,
+  documentId,
 } from 'firebase/firestore';
 
 // ─── Firebase Configuration ──────────────────────────────────────────────────
@@ -179,8 +180,8 @@ export async function searchCustomers(searchQuery) {
     // Try prefix search first
     let q = query(
       customersCol,
-      where('__name__', '>=', normalized),
-      where('__name__', '<=', normalized + '\uf8ff'),
+      where(documentId(), '>=', normalized),
+      where(documentId(), '<=', normalized + '\uf8ff'),
       limit(20),
     );
 
