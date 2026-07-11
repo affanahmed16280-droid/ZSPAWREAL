@@ -1,17 +1,18 @@
 import React from 'react';
-import { HiHome, HiPlus, HiChartBar, HiClipboardList } from 'react-icons/hi';
+import { HiHome, HiPlus, HiChartBar, HiClipboardList, HiCurrencyDollar } from 'react-icons/hi';
 
 const tabs = [
   { key: 'dashboard', label: 'Home', icon: HiHome },
+  { key: 'history', label: 'History', icon: HiClipboardList },
   { key: 'newOrder', label: 'New Order', icon: HiPlus, isCenter: true },
   { key: 'reports', label: 'Reports', icon: HiChartBar },
-  { key: 'history', label: 'History', icon: HiClipboardList },
+  { key: 'expenses', label: 'Expenses', icon: HiCurrencyDollar },
 ];
 
 export default function BottomNav({ activeTab, setActiveTab }) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 safe-bottom bg-surface-900/90 backdrop-blur-2xl border-t border-white/10 z-40">
-      <div className="flex items-end justify-around px-2 pt-2 pb-2 max-w-lg mx-auto">
+      <div className="flex items-end justify-around px-1 pt-2 pb-2 max-w-lg mx-auto">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
           const Icon = tab.icon;
@@ -45,11 +46,11 @@ export default function BottomNav({ activeTab, setActiveTab }) {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 group transition-all duration-200 active:scale-95"
+              className="flex flex-col items-center justify-center min-w-[48px] min-h-[44px] py-1 group transition-all duration-200 active:scale-95"
               aria-label={tab.label}
             >
-              <Icon className={`text-2xl transition-colors duration-200 ${isActive ? 'text-brand-400' : 'text-white/40 group-hover:text-white/60'}`} />
-              <span className={`text-[10px] mt-1 font-medium transition-colors duration-200 ${isActive ? 'text-brand-400' : 'text-white/40'}`}>
+              <Icon className={`text-xl transition-colors duration-200 ${isActive ? 'text-brand-400' : 'text-white/40 group-hover:text-white/60'}`} />
+              <span className={`text-[9px] mt-1 font-medium transition-colors duration-200 ${isActive ? 'text-brand-400' : 'text-white/40'}`}>
                 {tab.label}
               </span>
               {isActive && (

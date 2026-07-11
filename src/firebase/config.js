@@ -263,3 +263,25 @@ export async function getOrdersByCustomerPhone(phone) {
     return timeB - timeA;
   });
 }
+
+// ─── Expenses ────────────────────────────────────────────────────────────────
+const expensesCol = collection(db, 'expenses');
+
+export async function addExpense({ category, description, amount }) {
+  if (!category) throw new Error('Category is required');
+  if (!amount || isNaN(amount)) throw new Error('Valid amount is required');
+
+  const docRef = await addDoc(expensesCol, {
+    category,
+    description: description || '',
+    amount: Number(amount),
+    date: Timestamp.now(),
+  });
+
+  return { id: docRef.id };
+}
+
+export async function deleteExpense(expenseId) {
+  const expenseRef = doc(expensesCol, expenseId);
+  await deleteDoc(expenseRef);
+}

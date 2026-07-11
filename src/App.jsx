@@ -5,12 +5,14 @@ import Dashboard from './components/Dashboard';
 import OrderForm from './components/OrderForm';
 import Reports from './components/Reports';
 import OrderHistory from './components/OrderHistory';
+import Expenses from './components/Expenses';
 
 const TABS = {
   dashboard: Dashboard,
   newOrder: OrderForm,
   reports: Reports,
   history: OrderHistory,
+  expenses: Expenses,
 };
 
 export default function App() {

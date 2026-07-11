@@ -10,8 +10,6 @@ import {
 } from 'react-icons/hi';
 import { useStats } from '../hooks/useStats';
 import { formatCurrency } from '../utils/helpers';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import toast from 'react-hot-toast';
 
 const PERIODS = [
@@ -73,6 +71,10 @@ export default function Reports() {
   const handleDownloadPdf = async () => {
     setGeneratingPdf(true);
     try {
+      // Dynamic imports to ensure jspdf-autotable properly extends jsPDF
+      const { default: jsPDF } = await import('jspdf');
+      await import('jspdf-autotable');
+
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
       const periodLabel = getPeriodLabel(period);
@@ -144,7 +146,6 @@ export default function Reports() {
 
       // Coating breakdown
       if (coatingStats && coatingStats.length > 0) {
-        // Check if we need a new page
         if (y > 240) {
           doc.addPage();
           y = 20;
@@ -183,9 +184,10 @@ export default function Reports() {
       // Save
       const fileName = `ZS_Trading_Report_${periodLabel.replace(/\s/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
       doc.save(fileName);
+      toast.success('PDF downloaded!');
     } catch (err) {
       console.error('PDF generation error:', err);
-      toast.error('Failed to generate PDF');
+      toast.error('Failed to generate PDF: ' + (err.message || 'Unknown error'));
     } finally {
       setGeneratingPdf(false);
     }
