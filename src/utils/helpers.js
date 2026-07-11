@@ -63,3 +63,17 @@ export function getGreeting() {
 export function validatePhone(phone) {
   return /^\d{7,15}$/.test(phone.replace(/[\s-]/g, ''));
 }
+
+/**
+ * Normalize a customer name for storage/searching: trims outer whitespace
+ * and collapses any internal run of whitespace to a single space.
+ * Without this, a name saved with a stray leading/trailing/double space
+ * (easy to do from a phone keyboard) silently breaks the Firestore
+ * prefix-range search used by customer lookup, because the range query
+ * compares strings byte-for-byte.
+ * @param {string} name
+ * @returns {string}
+ */
+export function normalizeName(name) {
+  return (name || '').trim().replace(/\s+/g, ' ');
+}
