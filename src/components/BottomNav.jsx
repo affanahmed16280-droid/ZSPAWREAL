@@ -1,0 +1,64 @@
+import React from 'react';
+import { HiHome, HiPlus, HiChartBar, HiClipboardList } from 'react-icons/hi';
+
+const tabs = [
+  { key: 'dashboard', label: 'Home', icon: HiHome },
+  { key: 'newOrder', label: 'New Order', icon: HiPlus, isCenter: true },
+  { key: 'reports', label: 'Reports', icon: HiChartBar },
+  { key: 'history', label: 'History', icon: HiClipboardList },
+];
+
+export default function BottomNav({ activeTab, setActiveTab }) {
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 safe-bottom bg-surface-900/90 backdrop-blur-2xl border-t border-white/10 z-40">
+      <div className="flex items-end justify-around px-2 pt-2 pb-2 max-w-lg mx-auto">
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.key;
+          const Icon = tab.icon;
+
+          if (tab.isCenter) {
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className="flex flex-col items-center justify-center -mt-5 group"
+                aria-label={tab.label}
+              >
+                <div
+                  className={`
+                    w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/30
+                    bg-gradient-to-br from-brand-500 to-brand-700
+                    transition-all duration-200 active:scale-90
+                    ${isActive ? 'ring-2 ring-brand-400/50 scale-105' : 'hover:scale-105'}
+                  `}
+                >
+                  <Icon className="text-2xl text-white" />
+                </div>
+                <span className={`text-[10px] mt-1 font-medium transition-colors duration-200 ${isActive ? 'text-brand-400' : 'text-white/40'}`}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          }
+
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 group transition-all duration-200 active:scale-95"
+              aria-label={tab.label}
+            >
+              <Icon className={`text-2xl transition-colors duration-200 ${isActive ? 'text-brand-400' : 'text-white/40 group-hover:text-white/60'}`} />
+              <span className={`text-[10px] mt-1 font-medium transition-colors duration-200 ${isActive ? 'text-brand-400' : 'text-white/40'}`}>
+                {tab.label}
+              </span>
+              {isActive && (
+                <span className="w-1 h-1 rounded-full bg-brand-400 mt-0.5 animate-fade-in" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}

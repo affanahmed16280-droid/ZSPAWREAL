@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    overscroll-behavior-y: contain;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  input, select, textarea {
+    font-size: 16px !important; /* Prevent iOS zoom */
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl;
+  }
+  .glass-card-light {
+    @apply bg-surface-800/60 backdrop-blur-xl border border-white/5 rounded-2xl;
+  }
+  .input-field {
+    @apply w-full px-4 py-3.5 bg-surface-800/80 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all duration-200;
+  }
+  .btn-primary {
+    @apply w-full py-4 bg-gradient-to-r from-brand-600 to-brand-500 text-white font-semibold rounded-xl active:scale-[0.98] transition-all duration-200 shadow-lg shadow-brand-500/25 disabled:opacity-50 disabled:active:scale-100;
+  }
+  .chip {
+    @apply px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border;
+  }
+  .chip-active {
+    @apply bg-brand-500/20 border-brand-500/50 text-brand-300;
+  }
+  .chip-inactive {
+    @apply bg-surface-800/50 border-white/10 text-white/50 active:bg-surface-700/50;
+  }
+}
+
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
