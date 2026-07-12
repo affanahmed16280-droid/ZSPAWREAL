@@ -269,6 +269,53 @@ export default function Dashboard({ setActiveTab }) {
 
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-5 space-y-3">
+              
+              {/* Latest Prescription Summary */}
+              {!modalLoading && customerOrders.length > 0 && (
+                (() => {
+                  const latestPrescription = customerOrders.find(
+                    (o) => o.orderType === 'prescription' || (!o.orderType && (o.sphRight || o.sphLeft || o.pd))
+                  );
+                  if (latestPrescription && (latestPrescription.sphRight || latestPrescription.sphLeft || latestPrescription.pd)) {
+                    return (
+                      <div className="mb-6 animate-fade-in">
+                        <h4 className="text-xs font-semibold text-accent-gold uppercase tracking-wider mb-3">
+                          Latest Prescription
+                        </h4>
+                        <div className="bg-black/20 rounded-xl border border-white/5 p-3">
+                          <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-x-2 gap-y-2 text-[11px] font-mono text-white/70 mb-3">
+                            <div className="font-semibold text-white/40 border-b border-white/5 pb-1">EYE</div>
+                            <div className="font-semibold text-white/40 border-b border-white/5 pb-1 text-center">SPH</div>
+                            <div className="font-semibold text-white/40 border-b border-white/5 pb-1 text-center">CYL</div>
+                            <div className="font-semibold text-white/40 border-b border-white/5 pb-1 text-center">AXIS</div>
+                            <div className="font-semibold text-white/40 border-b border-white/5 pb-1 text-center">ADD</div>
+                            
+                            <div className="font-bold text-accent-champagne">R (OD)</div>
+                            <div className="text-center text-white">{latestPrescription.sphRight || '-'}</div>
+                            <div className="text-center text-white">{latestPrescription.cylRight || '-'}</div>
+                            <div className="text-center text-white">{latestPrescription.axisRight || '-'}</div>
+                            <div className="text-center text-white">{latestPrescription.addRight || '-'}</div>
+                            
+                            <div className="font-bold text-accent-champagne">L (OS)</div>
+                            <div className="text-center text-white">{latestPrescription.sphLeft || '-'}</div>
+                            <div className="text-center text-white">{latestPrescription.cylLeft || '-'}</div>
+                            <div className="text-center text-white">{latestPrescription.axisLeft || '-'}</div>
+                            <div className="text-center text-white">{latestPrescription.addLeft || '-'}</div>
+                          </div>
+                          {latestPrescription.pd && (
+                            <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+                              <span className="text-xs font-semibold text-white/40">Pupillary Distance (PD):</span>
+                              <span className="text-xs font-bold text-white bg-white/5 px-2 py-1 rounded">{latestPrescription.pd}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()
+              )}
+
               <h4 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-2">
                 Order History
               </h4>
