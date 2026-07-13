@@ -214,6 +214,13 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
                   </div>
                 </div>
               )}
+              
+              {/* Lens Note */}
+              {order.lensNote && (
+                <div className="w-full mt-2 p-2 bg-accent-gold/5 border border-accent-gold/20 rounded-lg text-accent-gold text-xs">
+                  <strong>Note:</strong> {order.lensNote}
+                </div>
+              )}
             </>
           )}
 
@@ -235,6 +242,12 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
           {order.orderType === 'servicing' && order.serviceDescription && (
             <span className="bg-white/5 px-2.5 py-1 rounded-md border border-white/5 italic w-full">
               "{order.serviceDescription}"
+            </span>
+          )}
+
+          {order.orderType === 'inquiry' && order.productDetails && (
+            <span className="bg-white/5 px-2.5 py-1 rounded-md border border-white/5 w-full">
+              <strong>Inquiry:</strong> {order.productDetails}
             </span>
           )}
         </div>
@@ -319,6 +332,8 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
                 detailsStr = [order.contactBrand, order.quantity].filter(Boolean).join(', ');
               } else if (order.orderType === 'servicing') {
                 detailsStr = order.serviceDescription || 'Servicing';
+              } else if (order.orderType === 'inquiry') {
+                detailsStr = order.productDetails || 'Inquiry';
               }
 
               autoTable(doc, {

@@ -90,6 +90,8 @@ export async function createOrder({
   contactBrand,
   quantity,
   serviceDescription,
+  lensNote,
+  productDetails,
   totalAmount,
 }) {
   // Normalize phone for consistent document IDs
@@ -154,6 +156,8 @@ export async function createOrder({
       contactBrand: contactBrand ?? '',
       quantity: quantity ?? '',
       serviceDescription: serviceDescription ?? '',
+      lensNote: lensNote ?? '',
+      productDetails: productDetails ?? '',
       totalAmount: Number(totalAmount) || 0,
       orderDate: Timestamp.now(),
       status: 'Pending',

@@ -12,7 +12,7 @@ import { validatePhone } from '../utils/helpers';
 import toast from 'react-hot-toast';
 
 const LENS_BRANDS = ['Varilux', 'Essilor', 'Zeiss', 'Hoya', 'Kodak', 'Other'];
-const LENS_COATINGS = ['Blue Cut', 'Green Cut', 'Anti-Reflective', 'Photochromic', 'None'];
+const LENS_COATINGS = ['Blue Cut', 'Green Cut', 'Anti-Reflective', 'Photochromic', 'Bifocal', 'Progressive (Moon)', 'Progressive D', 'Photosun', 'None'];
 
 const initialForm = {
   orderType: 'prescription', // prescription, sunglasses, contact_lenses, servicing
@@ -31,6 +31,8 @@ const initialForm = {
   contactBrand: '',
   quantity: '',
   serviceDescription: '',
+  lensNote: '',
+  productDetails: '',
   totalAmount: '',
 };
 
@@ -179,13 +181,14 @@ export default function OrderForm() {
         {/* Order Type */}
         <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '25ms' }}>
           <h3 className="text-sm font-semibold text-white">Order Type</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {['prescription', 'sunglasses', 'contact_lenses', 'servicing'].map((type) => {
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            {['prescription', 'sunglasses', 'contact_lenses', 'servicing', 'inquiry'].map((type) => {
               const labels = {
                 prescription: 'Prescription Glasses',
                 sunglasses: 'Sunglasses',
                 contact_lenses: 'Contact Lenses',
                 servicing: 'Servicing / Frame',
+                inquiry: 'Product Inquiry',
               };
               return (
                 <button
@@ -283,6 +286,16 @@ export default function OrderForm() {
                 className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]"
               />
             </div>
+            <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '400ms' }}>
+              <h3 className="text-sm font-semibold text-white">Lens Note (Optional)</h3>
+              <input
+                type="text"
+                value={form.lensNote}
+                onChange={(e) => set('lensNote', e.target.value)}
+                placeholder="Special instructions or notes for this lens"
+                className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]"
+              />
+            </div>
           </>
         )}
 
@@ -362,6 +375,21 @@ export default function OrderForm() {
                 value={form.serviceDescription}
                 onChange={(e) => set('serviceDescription', e.target.value)}
                 placeholder="Describe the repair or service needed (e.g. Frame alignment, nose pad replacement, screw loose)"
+                className="input-field w-full py-2.5 px-3 text-sm min-h-[100px] resize-none"
+              />
+            </div>
+          </>
+        )}
+
+        {/* === INQUIRY / WAITLIST === */}
+        {form.orderType === 'inquiry' && (
+          <>
+            <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '100ms' }}>
+              <h3 className="text-sm font-semibold text-white">Product Inquiry Details</h3>
+              <textarea
+                value={form.productDetails}
+                onChange={(e) => set('productDetails', e.target.value)}
+                placeholder="What product is the customer looking for? (e.g. Specific frame size, out of stock lens)"
                 className="input-field w-full py-2.5 px-3 text-sm min-h-[100px] resize-none"
               />
             </div>
