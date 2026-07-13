@@ -33,6 +33,9 @@ export default function Dashboard({ setActiveTab }) {
   const [customerOrders, setCustomerOrders] = useState([]);
   const [modalLoading, setModalLoading] = useState(false);
 
+  const [showCampaignModal, setShowCampaignModal] = useState(false);
+  const [campaignMessage, setCampaignMessage] = useState('Hello from ZS Trading! Check out our new upcoming products here: [Link]');
+
   const searchRef = useRef(null);
   const debounceTimer = useRef(null);
 
@@ -93,16 +96,29 @@ export default function Dashboard({ setActiveTab }) {
     if (!orders) return;
     const emails = [...new Set(orders.map(o => o.customerEmail).filter(Boolean))];
     if (emails.length === 0) {
-      toast.error('No customer emails found.');
+      toast.error('No customer emails found in the database. Make sure to collect emails in new orders!');
       return;
     }
     const bccList = emails.join(',');
     window.location.href = `mailto:?bcc=${bccList}&subject=Exclusive Offer from ZS Trading&body=Hello! Check out our new upcoming products...`;
   };
 
+  const uniqueCustomers = React.useMemo(() => {
+    if (!orders) return [];
+    const map = new Map();
+    orders.forEach(o => {
+      if (o.customerPhone) {
+        const phone = o.customerPhone.replace(/\D/g, '');
+        if (!map.has(phone)) {
+          map.set(phone, { name: o.customerName || 'Customer', phone: o.customerPhone });
+        }
+      }
+    });
+    return Array.from(map.values());
+  }, [orders]);
+
   const handleWhatsAppPromo = () => {
-    const text = encodeURIComponent('Hello from ZS Trading! Check out our new upcoming products here: [Link]');
-    window.open(`https://wa.me/?text=${text}`, '_blank');
+    setShowCampaignModal(true);
   };
 
   return (
@@ -439,6 +455,80 @@ export default function Dashboard({ setActiveTab }) {
                     <OrderCard order={order} />
                   </div>
                 ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp Campaign Modal */}
+      {showCampaignModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center animate-fade-in"
+          onClick={() => setShowCampaignModal(false)}
+        >
+          <div
+            className="w-[90%] max-w-lg bg-surface-900 rounded-2xl border border-white/10 overflow-hidden flex flex-col animate-slide-up max-h-[85vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-5 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center">
+                  <HiChat className="text-lg text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">WhatsApp Campaign</h3>
+                  <p className="text-xs text-white/40">{uniqueCustomers.length} total customers</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCampaignModal(false)}
+                className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <HiX />
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto flex-1 space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2 block">
+                  Your Custom Message
+                </label>
+                <textarea
+                  value={campaignMessage}
+                  onChange={(e) => setCampaignMessage(e.target.value)}
+                  placeholder="Type your promotional message here..."
+                  className="input-field w-full p-3 text-sm min-h-[100px] resize-none"
+                />
+                <p className="text-[10px] text-white/30 mt-1">Due to WhatsApp security limits, bulk messages must be sent by clicking 'Send' for each customer below.</p>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2 block">
+                  Customer List
+                </label>
+                <div className="space-y-2">
+                  {uniqueCustomers.length === 0 && (
+                    <p className="text-sm text-white/30 text-center py-4">No customers found in database.</p>
+                  )}
+                  {uniqueCustomers.map((c, idx) => (
+                    <div key={idx} className="flex items-center justify-between bg-black/20 border border-white/5 p-3 rounded-xl">
+                      <div className="min-w-0 pr-3">
+                        <p className="text-sm font-semibold text-white truncate">{c.name}</p>
+                        <p className="text-xs text-white/40">{c.phone}</p>
+                      </div>
+                      <a
+                        href={`https://wa.me/${c.phone.replace(/\D/g, '')}?text=${encodeURIComponent(campaignMessage)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-shrink-0 flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95"
+                      >
+                        <HiChat />
+                        Send
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
