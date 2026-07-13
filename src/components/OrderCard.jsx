@@ -67,6 +67,22 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
   const [pinError, setPinError] = useState('');
   const [isProcessingAction, setIsProcessingAction] = useState(false);
 
+  const executeStatusUpdate = async (newStatus) => {
+    setIsProcessingAction(true);
+    try {
+      await updateOrderStatus(order.id, newStatus);
+      if (onStatusToggle) {
+        onStatusToggle(order.id, newStatus);
+      }
+      toast.success(`Order #${order.orderSequenceId} → ${newStatus}`);
+      setShowPinModal(false);
+    } catch (err) {
+      toast.error('Failed to update status');
+    } finally {
+      setIsProcessingAction(false);
+    }
+  };
+
   const handleToggle = async () => {
     if (order.status === 'Cancelled') return;
     
@@ -76,15 +92,15 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
     else if (order.status === 'Ready for Pickup') newStatus = 'Delivered';
     else if (order.status === 'Delivered' || order.status === 'Completed') newStatus = 'Pending';
 
-    try {
-      await updateOrderStatus(order.id, newStatus);
-      if (onStatusToggle) {
-        onStatusToggle(order.id, newStatus);
-      }
-      toast.success(`Order #${order.orderSequenceId} → ${newStatus}`);
-    } catch (err) {
-      toast.error('Failed to update status');
+    if (newStatus === 'Delivered') {
+      setPinAction('deliver');
+      setShowPinModal(true);
+      setPin('');
+      setPinError('');
+      return;
     }
+
+    await executeStatusUpdate(newStatus);
   };
 
   const handleCancelClick = () => {
@@ -126,6 +142,8 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
     
     if (pinAction === 'cancel') {
       await executeCancel();
+    } else if (pinAction === 'deliver') {
+      await executeStatusUpdate('Delivered');
     } else if (pinAction === 'delete') {
       setIsProcessingAction(true);
       try {
@@ -433,12 +451,14 @@ Phone: 01791729128 / 01623761027`)}`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center">
-                <HiLockClosed className="text-xl text-red-400" />
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${pinAction === 'deliver' ? 'bg-emerald-500/15' : 'bg-red-500/15'}`}>
+                <HiLockClosed className={`text-xl ${pinAction === 'deliver' ? 'text-emerald-400' : 'text-red-400'}`} />
               </div>
               <div>
                 <h3 className="text-base font-bold text-white">
-                  {pinAction === 'delete' ? `Delete Order #${order.orderSequenceId}` : `Cancel Order #${order.orderSequenceId}`}
+                  {pinAction === 'delete' ? `Delete Order #${order.orderSequenceId}` : 
+                   pinAction === 'cancel' ? `Cancel Order #${order.orderSequenceId}` : 
+                   `Mark Order #${order.orderSequenceId} as Delivered`}
                 </h3>
                 <p className="text-xs text-white/40">Enter PIN to {pinAction}</p>
               </div>
@@ -476,12 +496,18 @@ Phone: 01791729128 / 01623761027`)}`}
               <button
                 onClick={handlePinConfirm}
                 disabled={isProcessingAction || pin.length < 5}
-                className="flex-1 py-3 rounded-xl text-sm font-bold text-white
-                  bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400
+                className={`flex-1 py-3 rounded-xl text-sm font-bold text-white
                   transition-all duration-200 active:scale-95
-                  disabled:opacity-40 disabled:cursor-not-allowed min-h-[48px]"
+                  disabled:opacity-40 disabled:cursor-not-allowed min-h-[48px]
+                  ${pinAction === 'deliver' 
+                    ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400' 
+                    : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400'}`}
               >
-                {isProcessingAction ? 'Processing...' : (pinAction === 'delete' ? 'Delete Forever' : 'Cancel Order')}
+                {isProcessingAction ? 'Processing...' : (
+                  pinAction === 'delete' ? 'Delete Forever' : 
+                  pinAction === 'cancel' ? 'Cancel Order' : 
+                  'Confirm Delivery'
+                )}
               </button>
             </div>
           </div>
