@@ -376,6 +376,49 @@ export default function Dashboard({ setActiveTab }) {
                 })()
               )}
 
+              {/* 12 Month Check Reminder */}
+              {!modalLoading && customerOrders.length > 0 && (() => {
+                const latestOrder = [...customerOrders].sort((a, b) => {
+                  const dateA = a.orderDate?.toDate ? a.orderDate.toDate() : new Date(a.orderDate);
+                  const dateB = b.orderDate?.toDate ? b.orderDate.toDate() : new Date(b.orderDate);
+                  return dateB - dateA;
+                })[0];
+                
+                if (latestOrder) {
+                  const orderDate = latestOrder.orderDate?.toDate ? latestOrder.orderDate.toDate() : new Date(latestOrder.orderDate);
+                  const now = new Date();
+                  const msPerYear = 365 * 24 * 60 * 60 * 1000;
+                  const isOver12Months = (now - orderDate) >= msPerYear;
+
+                  if (isOver12Months) {
+                    const message = encodeURIComponent(`Hello ${selectedCustomer.name}, it's been over a year since your last eye check at ZS Trading! We recommend a regular checkup to keep your vision sharp. Would you like to schedule a visit?`);
+                    return (
+                      <div className="mb-6 animate-fade-in bg-accent-gold/10 border border-accent-gold/30 rounded-xl p-4 flex flex-col sm:flex-row items-center gap-4 justify-between">
+                        <div>
+                          <h4 className="text-sm font-bold text-accent-gold flex items-center gap-1.5 mb-1">
+                            <HiClock className="text-lg" />
+                            Due for Re-check (12+ Months)
+                          </h4>
+                          <p className="text-xs text-white/60">
+                            Last order was {formatDateShort(latestOrder.orderDate)}.
+                          </p>
+                        </div>
+                        <a
+                          href={`https://wa.me/${selectedCustomer.phone.replace(/\D/g, '')}?text=${message}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-shrink-0 flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all active:scale-95 shadow-lg shadow-emerald-500/20"
+                        >
+                          <HiChat className="text-lg" />
+                          Send Reminder
+                        </a>
+                      </div>
+                    );
+                  }
+                }
+                return null;
+              })()}
+
               <h4 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-2">
                 Order History
               </h4>

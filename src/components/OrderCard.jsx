@@ -12,6 +12,7 @@ import {
 import { formatCurrency, formatDateShort } from '../utils/helpers';
 import { updateOrderStatus, deleteOrder } from '../firebase/config';
 import toast from 'react-hot-toast';
+import { HiCog, HiTruck, HiChat } from 'react-icons/hi';
 
 const DELETE_PIN = '62376';
 
@@ -22,7 +23,25 @@ const statusConfig = {
     border: 'border-accent-gold/30',
     icon: HiClock,
   },
-  Completed: {
+  Processing: {
+    bg: 'bg-brand-500/15',
+    text: 'text-brand-400',
+    border: 'border-brand-500/30',
+    icon: HiCog,
+  },
+  'Ready for Pickup': {
+    bg: 'bg-emerald-500/15',
+    text: 'text-emerald-400',
+    border: 'border-emerald-500/30',
+    icon: HiTruck,
+  },
+  Delivered: {
+    bg: 'bg-accent-champagne/15',
+    text: 'text-accent-champagne',
+    border: 'border-accent-champagne/30',
+    icon: HiCheckCircle,
+  },
+  Completed: { // Legacy support
     bg: 'bg-accent-champagne/15',
     text: 'text-accent-champagne',
     border: 'border-accent-champagne/30',
@@ -48,7 +67,13 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
 
   const handleToggle = async () => {
     if (order.status === 'Cancelled') return;
-    const newStatus = order.status === 'Pending' ? 'Completed' : 'Pending';
+    
+    let newStatus = 'Processing';
+    if (order.status === 'Pending') newStatus = 'Processing';
+    else if (order.status === 'Processing') newStatus = 'Ready for Pickup';
+    else if (order.status === 'Ready for Pickup') newStatus = 'Delivered';
+    else if (order.status === 'Delivered' || order.status === 'Completed') newStatus = 'Pending';
+
     try {
       await updateOrderStatus(order.id, newStatus);
       if (onStatusToggle) {
@@ -208,6 +233,21 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
             {formatDateShort(order.orderDate)}
           </span>
         </div>
+
+        {/* WhatsApp Ready for Pickup Notification */}
+        {order.status === 'Ready for Pickup' && order.customerPhone && (
+          <div className="mb-3 pt-2 border-t border-white/5">
+            <a
+              href={`https://wa.me/${order.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${order.customerName}, your order (#${order.orderSequenceId}) from ZS Trading is ready for collection! We look forward to seeing you soon.`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-2.5 rounded-lg text-xs font-bold transition-all active:scale-95"
+            >
+              <HiChat className="text-base" />
+              Notify Customer via WhatsApp
+            </a>
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 pt-2 border-t border-white/5">
