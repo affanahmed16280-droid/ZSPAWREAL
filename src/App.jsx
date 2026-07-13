@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase/config';
 import Layout from './components/Layout';
 import BottomNav from './components/BottomNav';
 import Dashboard from './components/Dashboard';
@@ -19,24 +21,28 @@ const TABS = {
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
-  // Check localStorage on mount
   useEffect(() => {
-    const auth = localStorage.getItem('zs_auth');
-    if (auth === 'true') {
-      setIsAuthenticated(true);
-    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsAuthenticated(!!user);
+      setIsInitializing(false);
+    });
+    return () => unsubscribe();
   }, []);
-
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-    localStorage.setItem('zs_auth', 'true');
-  };
 
   const ActiveComponent = TABS[activeTab] || Dashboard;
 
+  if (isInitializing) {
+    return (
+      <div className="min-h-[100dvh] bg-black flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-accent-gold border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} />;
+    return <Login />;
   }
 
   return (

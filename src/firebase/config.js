@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 import {
   initializeFirestore,
   persistentLocalCache,
@@ -43,7 +44,9 @@ const db = initializeFirestore(app, {
   }),
 });
 
-export { db };
+const auth = getAuth(app);
+
+export { db, auth };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 /**
