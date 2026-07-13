@@ -62,10 +62,10 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
   const StatusIcon = config.icon;
 
   const [showPinModal, setShowPinModal] = useState(false);
+  const [pinAction, setPinAction] = useState(null); // 'delete' | 'cancel'
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState('');
-  const [deleting, setDeleting] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
+  const [isProcessingAction, setIsProcessingAction] = useState(false);
 
   const handleToggle = async () => {
     if (order.status === 'Cancelled') return;
@@ -87,45 +87,59 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
     }
   };
 
-  const handleCancel = async () => {
+  const handleCancelClick = () => {
     if (order.status === 'Cancelled') return;
-    setCancelling(true);
+    setPinAction('cancel');
+    setShowPinModal(true);
+    setPin('');
+    setPinError('');
+  };
+
+  const executeCancel = async () => {
+    setIsProcessingAction(true);
     try {
       await updateOrderStatus(order.id, 'Cancelled');
       if (onStatusToggle) {
         onStatusToggle(order.id, 'Cancelled');
       }
       toast.success(`Order #${order.orderSequenceId} cancelled`);
+      setShowPinModal(false);
     } catch (err) {
       toast.error('Failed to cancel order');
     } finally {
-      setCancelling(false);
+      setIsProcessingAction(false);
     }
   };
 
   const handleDeleteClick = () => {
+    setPinAction('delete');
     setShowPinModal(true);
     setPin('');
     setPinError('');
   };
 
-  const handleDeleteConfirm = async () => {
+  const handlePinConfirm = async () => {
     if (pin !== DELETE_PIN) {
       setPinError('Incorrect PIN');
       return;
     }
-    setDeleting(true);
-    try {
-      await deleteOrder(order.id);
-      if (onDelete) {
-        onDelete(order.id);
+    
+    if (pinAction === 'cancel') {
+      await executeCancel();
+    } else if (pinAction === 'delete') {
+      setIsProcessingAction(true);
+      try {
+        await deleteOrder(order.id);
+        if (onDelete) {
+          onDelete(order.id);
+        }
+        toast.success(`Order #${order.orderSequenceId} deleted permanently`);
+        setShowPinModal(false);
+      } catch (err) {
+        toast.error('Failed to delete order');
+      } finally {
+        setIsProcessingAction(false);
       }
-      toast.success(`Order #${order.orderSequenceId} deleted permanently`);
-      setShowPinModal(false);
-    } catch (err) {
-      toast.error('Failed to delete order');
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -372,15 +386,13 @@ Phone: 01791729128 / 01623761027`)}`}
         <div className="flex items-center gap-2 pt-2 border-t border-white/5">
           {order.status !== 'Cancelled' && (
             <button
-              onClick={handleCancel}
-              disabled={cancelling}
+              onClick={handleCancelClick}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold
                 bg-white/5 text-white/50 border border-white/10
-                hover:bg-white/10 transition-all duration-200 active:scale-95
-                disabled:opacity-50 min-h-[36px]"
+                hover:bg-white/10 transition-all duration-200 active:scale-95 min-h-[36px]"
             >
               <HiBan className="text-sm" />
-              {cancelling ? 'Cancelling...' : 'Cancel'}
+              Cancel
             </button>
           )}
           <button
@@ -410,8 +422,10 @@ Phone: 01791729128 / 01623761027`)}`}
                 <HiLockClosed className="text-xl text-red-400" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">Delete Order #{order.orderSequenceId}</h3>
-                <p className="text-xs text-white/40">Enter PIN to permanently delete</p>
+                <h3 className="text-base font-bold text-white">
+                  {pinAction === 'delete' ? `Delete Order #${order.orderSequenceId}` : `Cancel Order #${order.orderSequenceId}`}
+                </h3>
+                <p className="text-xs text-white/40">Enter PIN to {pinAction}</p>
               </div>
             </div>
 
@@ -425,7 +439,7 @@ Phone: 01791729128 / 01623761027`)}`}
                   setPin(e.target.value);
                   setPinError('');
                 }}
-                onKeyDown={(e) => e.key === 'Enter' && handleDeleteConfirm()}
+                onKeyDown={(e) => e.key === 'Enter' && handlePinConfirm()}
                 placeholder="Enter 5-digit PIN"
                 className="input-field w-full py-3 px-4 text-center text-lg tracking-[0.5em] font-bold min-h-[48px]"
                 autoFocus
@@ -445,14 +459,14 @@ Phone: 01791729128 / 01623761027`)}`}
                 Cancel
               </button>
               <button
-                onClick={handleDeleteConfirm}
-                disabled={deleting || pin.length < 5}
+                onClick={handlePinConfirm}
+                disabled={isProcessingAction || pin.length < 5}
                 className="flex-1 py-3 rounded-xl text-sm font-bold text-white
                   bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400
                   transition-all duration-200 active:scale-95
                   disabled:opacity-40 disabled:cursor-not-allowed min-h-[48px]"
               >
-                {deleting ? 'Deleting...' : 'Delete Forever'}
+                {isProcessingAction ? 'Processing...' : (pinAction === 'delete' ? 'Delete Forever' : 'Cancel Order')}
               </button>
             </div>
           </div>

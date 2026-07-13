@@ -71,6 +71,7 @@ export async function createOrder({
   orderType,
   customerPhone,
   customerName,
+  customerEmail,
   sphRight,
   cylRight,
   axisRight,
@@ -103,8 +104,11 @@ export async function createOrder({
     await setDoc(customerRef, {
       name: (customerName || '').toLowerCase(),
       displayName: customerName || '',
+      email: customerEmail || '',
       createdAt: Timestamp.now(),
     });
+  } else if (customerEmail) {
+    await updateDoc(customerRef, { email: customerEmail });
   }
 
   // 2. Atomic counter increment inside a transaction -------------------------
@@ -131,6 +135,7 @@ export async function createOrder({
       orderSequenceId: nextId,
       customerPhone: phone,
       customerName: customerName || '',
+      customerEmail: customerEmail || '',
       sphRight: sphRight ?? null,
       cylRight: cylRight ?? null,
       axisRight: axisRight ?? null,
