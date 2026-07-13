@@ -103,90 +103,76 @@ export async function createOrder({
 
   // 1. Upsert customer -------------------------------------------------------
   const customerRef = doc(customersCol, phone);
-  const customerSnap = await getDoc(customerRef);
+  
+  // Use merge:true to update or create customer without needing to fetch first, completely offline-safe.
+  setDoc(customerRef, {
+    name: (customerName || '').toLowerCase(),
+    displayName: customerName || '',
+    ...(customerEmail ? { email: customerEmail } : {}),
+  }, { merge: true }).catch(console.error);
 
-  if (!customerSnap.exists()) {
-    await setDoc(customerRef, {
-      name: (customerName || '').toLowerCase(),
-      displayName: customerName || '',
-      email: customerEmail || '',
-      createdAt: Timestamp.now(),
-    });
-  } else if (customerEmail) {
-    await updateDoc(customerRef, { email: customerEmail });
+  // 2. Counter increment (Offline compatible: removed transaction) -----------
+  const countersSnap = await getDoc(countersDoc);
+  let currentTotal = 0;
+  if (countersSnap.exists()) {
+    currentTotal = countersSnap.data().totalOrders ?? 0;
   }
+  const nextId = currentTotal + 1;
 
-  // 2. Atomic counter increment inside a transaction -------------------------
-  const sequenceId = await runTransaction(db, async (transaction) => {
-    const countersSnap = await transaction.get(countersDoc);
+  // Fire and forget cache updates so it doesn't block while offline
+  setDoc(countersDoc, { totalOrders: nextId }, { merge: true }).catch(console.error);
 
-    let currentTotal = 0;
-    if (countersSnap.exists()) {
-      currentTotal = countersSnap.data().totalOrders ?? 0;
-    }
+  // 3. Create the order document ----------------------------------------------
+  const orderRef = doc(ordersCol);
+  setDoc(orderRef, {
+    orderType: orderType || 'prescription',
+    orderSequenceId: nextId,
+    customerPhone: phone,
+    customerName: customerName || '',
+    customerEmail: customerEmail || '',
+    sphRight: sphRight ?? null,
+    cylRight: cylRight ?? null,
+    axisRight: axisRight ?? null,
+    addRight: addRight ?? null,
+    sphLeft: sphLeft ?? null,
+    cylLeft: cylLeft ?? null,
+    axisLeft: axisLeft ?? null,
+    addLeft: addLeft ?? null,
+    pd: pd ?? null,
+    lensBrand: lensBrand ?? '',
+    lensCoating: lensCoating ?? '',
+    frameDetails: frameDetails ?? '',
+    sunglassBrand: sunglassBrand ?? '',
+    sunglassModel: sunglassModel ?? '',
+    sunglassColor: sunglassColor ?? '',
+    contactBrand: contactBrand ?? '',
+    quantity: quantity ?? '',
+    serviceDescription: serviceDescription ?? '',
+    lensNote: lensNote ?? '',
+    productDetails: productDetails ?? '',
+    totalAmount: Number(totalAmount) || 0,
+    orderDate: Timestamp.now(),
+    status: 'Pending',
+  }).catch(console.error);
 
-    const nextId = currentTotal + 1;
-
-    transaction.set(
-      countersDoc,
-      { totalOrders: nextId },
-      { merge: true },
-    );
-
-    // 3. Create the order document inside the same transaction ----------------
-    const orderRef = doc(ordersCol);
-    transaction.set(orderRef, {
-      orderType: orderType || 'prescription',
-      orderSequenceId: nextId,
-      customerPhone: phone,
-      customerName: customerName || '',
-      customerEmail: customerEmail || '',
-      sphRight: sphRight ?? null,
-      cylRight: cylRight ?? null,
-      axisRight: axisRight ?? null,
-      addRight: addRight ?? null,
-      sphLeft: sphLeft ?? null,
-      cylLeft: cylLeft ?? null,
-      axisLeft: axisLeft ?? null,
-      addLeft: addLeft ?? null,
-      pd: pd ?? null,
-      lensBrand: lensBrand ?? '',
-      lensCoating: lensCoating ?? '',
-      frameDetails: frameDetails ?? '',
-      sunglassBrand: sunglassBrand ?? '',
-      sunglassModel: sunglassModel ?? '',
-      sunglassColor: sunglassColor ?? '',
-      contactBrand: contactBrand ?? '',
-      quantity: quantity ?? '',
-      serviceDescription: serviceDescription ?? '',
-      lensNote: lensNote ?? '',
-      productDetails: productDetails ?? '',
-      totalAmount: Number(totalAmount) || 0,
-      orderDate: Timestamp.now(),
-      status: 'Pending',
-    });
-
-    return nextId;
-  });
-
-  // 4. Return an object (fixes bug where OrderForm expected .orderSequenceId)
-  return { orderSequenceId: sequenceId };
+  // 4. Return an object immediately so UI updates
+  return { orderSequenceId: nextId };
 }
 
 // ─── updateOrderStatus ───────────────────────────────────────────────────────
 export async function updateOrderStatus(orderId, newStatus) {
   const orderRef = doc(ordersCol, orderId);
-  await updateDoc(orderRef, {
+  updateDoc(orderRef, {
     status: newStatus,
     updatedAt: Timestamp.now(),
-  });
+  }).catch(console.error);
 }
 
 // ─── deleteOrder ─────────────────────────────────────────────────────────────
 // Permanently deletes an order document from Firestore.
 export async function deleteOrder(orderId) {
   const orderRef = doc(ordersCol, orderId);
-  await deleteDoc(orderRef);
+  deleteDoc(orderRef).catch(console.error);
 }
 
 // ─── searchCustomers ─────────────────────────────────────────────────────────
@@ -226,6 +212,28 @@ export async function searchCustomers(searchQuery) {
       )
     )
   );
+
+  const numericQuery = parseInt(trimmed, 10);
+  if (!isNaN(numericQuery) && numericQuery > 0) {
+    queries.push(
+      getDocs(
+        query(ordersCol, where('orderSequenceId', '==', numericQuery), limit(3))
+      ).then(async (orderSnap) => {
+        if (!orderSnap.empty) {
+          const customerDocs = [];
+          for (const orderDoc of orderSnap.docs) {
+            const phone = orderDoc.data().customerPhone;
+            if (phone) {
+              const cSnap = await getDoc(doc(customersCol, phone));
+              if (cSnap.exists()) customerDocs.push(cSnap);
+            }
+          }
+          return { docs: customerDocs };
+        }
+        return { docs: [] };
+      })
+    );
+  }
 
   const snaps = await Promise.all(queries);
   let customerDocs = snaps.flatMap(snap => snap.docs);
@@ -283,17 +291,18 @@ export async function addExpense({ category, description, amount }) {
   if (!category) throw new Error('Category is required');
   if (!amount || isNaN(amount)) throw new Error('Valid amount is required');
 
-  const docRef = await addDoc(expensesCol, {
+  const docRef = doc(expensesCol);
+  setDoc(docRef, {
     category,
     description: description || '',
     amount: Number(amount),
     date: Timestamp.now(),
-  });
+  }).catch(console.error);
 
   return { id: docRef.id };
 }
 
 export async function deleteExpense(expenseId) {
   const expenseRef = doc(expensesCol, expenseId);
-  await deleteDoc(expenseRef);
+  deleteDoc(expenseRef).catch(console.error);
 }

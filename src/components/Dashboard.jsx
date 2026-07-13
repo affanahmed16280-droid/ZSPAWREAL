@@ -141,7 +141,7 @@ export default function Dashboard({ setActiveTab }) {
             type="text"
             value={query}
             onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Search customers by name or phone..."
+            placeholder="Search by name, phone, or order #..."
             className="input-field w-full pl-11 pr-4 py-3.5 text-sm min-h-[48px]"
           />
           {query && (
