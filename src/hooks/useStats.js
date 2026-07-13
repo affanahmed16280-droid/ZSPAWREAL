@@ -44,20 +44,37 @@ function getStartOfPeriod(period) {
  *   loading: boolean,
  * }}
  */
-export function useStats(period = 'day') {
+export function useStats(period = 'day', customDateRange = null) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // ── Real-time listener ─────────────────────────────────────────────────────
   useEffect(() => {
-    const periodStart = getStartOfPeriod(period);
-    const periodTimestamp = Timestamp.fromDate(periodStart);
+    let q;
+    const ordersCol = collection(db, 'orders');
 
-    const q = query(
-      collection(db, 'orders'),
-      where('orderDate', '>=', periodTimestamp),
-      orderBy('orderDate', 'desc'),
-    );
+    if (period === 'custom' && customDateRange?.start && customDateRange?.end) {
+      const startStamp = Timestamp.fromDate(customDateRange.start);
+      const endOfDay = new Date(customDateRange.end);
+      endOfDay.setHours(23, 59, 59, 999);
+      const endStamp = Timestamp.fromDate(endOfDay);
+
+      q = query(
+        ordersCol,
+        where('orderDate', '>=', startStamp),
+        where('orderDate', '<=', endStamp),
+        orderBy('orderDate', 'desc')
+      );
+    } else {
+      const periodStart = getStartOfPeriod(period);
+      const periodTimestamp = Timestamp.fromDate(periodStart);
+
+      q = query(
+        ordersCol,
+        where('orderDate', '>=', periodTimestamp),
+        orderBy('orderDate', 'desc')
+      );
+    }
 
     const unsubscribe = onSnapshot(
       q,
@@ -76,7 +93,7 @@ export function useStats(period = 'day') {
     );
 
     return () => unsubscribe();
-  }, [period]);
+  }, [period, customDateRange?.start, customDateRange?.end]);
 
   // ── Derived statistics (recomputed only when orders change) ────────────────
   const stats = useMemo(() => {

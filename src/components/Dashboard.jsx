@@ -9,7 +9,11 @@ import {
   HiX,
   HiChevronRight,
   HiCheckCircle,
+  HiMail,
+  HiChat,
+  HiSpeakerphone,
 } from 'react-icons/hi';
+import toast from 'react-hot-toast';
 import { useOrders } from '../hooks/useOrders';
 import { useCustomers } from '../hooks/useCustomers';
 import { useStats } from '../hooks/useStats';
@@ -84,6 +88,22 @@ export default function Dashboard({ setActiveTab }) {
   };
 
   const recentOrders = (orders || []).slice(0, 5);
+
+  const handleEmailBlast = () => {
+    if (!orders) return;
+    const emails = [...new Set(orders.map(o => o.customerEmail).filter(Boolean))];
+    if (emails.length === 0) {
+      toast.error('No customer emails found.');
+      return;
+    }
+    const bccList = emails.join(',');
+    window.location.href = `mailto:?bcc=${bccList}&subject=Exclusive Offer from ZS Trading&body=Hello! Check out our new upcoming products...`;
+  };
+
+  const handleWhatsAppPromo = () => {
+    const text = encodeURIComponent('Hello from ZS Trading! Check out our new upcoming products here: [Link]');
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+  };
 
   return (
     <div className="px-4 py-6 space-y-6">
@@ -201,6 +221,30 @@ export default function Dashboard({ setActiveTab }) {
         </button>
       </div>
 
+      {/* Marketing Hub */}
+      <div className="animate-fade-in" style={{ animationDelay: '375ms' }}>
+        <h2 className="text-base font-bold text-white mb-3 flex items-center gap-2">
+          <HiSpeakerphone className="text-brand-400" />
+          Marketing Hub
+        </h2>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={handleWhatsAppPromo}
+            className="glass-card flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-semibold text-emerald-400 hover:text-emerald-300 min-h-[48px] transition-all duration-200 active:scale-95 border border-emerald-500/20 bg-emerald-500/5"
+          >
+            <HiChat className="text-lg" />
+            WhatsApp Promo
+          </button>
+          <button
+            onClick={handleEmailBlast}
+            className="glass-card flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-semibold text-blue-400 hover:text-blue-300 min-h-[48px] transition-all duration-200 active:scale-95 border border-blue-500/20 bg-blue-500/5"
+          >
+            <HiMail className="text-lg" />
+            Email Blast
+          </button>
+        </div>
+      </div>
+
       {/* Recent Orders */}
       <div className="animate-fade-in" style={{ animationDelay: '400ms' }}>
         <div className="flex items-center justify-between mb-3">
@@ -259,12 +303,28 @@ export default function Dashboard({ setActiveTab }) {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={closeModal}
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all duration-200 active:scale-90"
-              >
-                <HiX className="text-xl" />
-              </button>
+              <div className="flex items-center gap-1.5">
+                <a
+                  href={`tel:${selectedCustomer.phone}`}
+                  className="w-10 h-10 rounded-full bg-blue-500/15 flex items-center justify-center text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 transition-all duration-200 active:scale-90"
+                >
+                  <HiPhone className="text-xl" />
+                </a>
+                <a
+                  href={`https://wa.me/${selectedCustomer.phone.replace(/\D/g, '')}?text=Hello ${encodeURIComponent(selectedCustomer.name)},`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/20 transition-all duration-200 active:scale-90"
+                >
+                  <HiChat className="text-xl" />
+                </a>
+                <button
+                  onClick={closeModal}
+                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all duration-200 active:scale-90"
+                >
+                  <HiX className="text-xl" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Body */}

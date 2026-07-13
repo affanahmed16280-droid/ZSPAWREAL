@@ -18,14 +18,15 @@ const PERIODS = [
   { key: 'day', label: 'Today' },
   { key: 'week', label: 'This Week' },
   { key: 'month', label: 'This Month' },
+  { key: 'custom', label: 'Custom' },
 ];
 
 function getPeriodLabel(period) {
-  const labels = { day: 'Today', week: 'This Week', month: 'This Month' };
+  const labels = { day: 'Today', week: 'This Week', month: 'This Month', custom: 'Custom Range' };
   return labels[period] || period;
 }
 
-function getPeriodDateRange(period) {
+function getPeriodDateRange(period, customRange = null) {
   const now = new Date();
   const options = { year: 'numeric', month: 'short', day: 'numeric' };
   const endStr = now.toLocaleDateString('en-US', options);
@@ -41,6 +42,11 @@ function getPeriodDateRange(period) {
   if (period === 'month') {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     return `${monthStart.toLocaleDateString('en-US', options)} – ${endStr}`;
+  }
+  if (period === 'custom' && customRange?.start && customRange?.end) {
+    const startStr = new Date(customRange.start).toLocaleDateString('en-US', options);
+    const customEndStr = new Date(customRange.end).toLocaleDateString('en-US', options);
+    return `${startStr} – ${customEndStr}`;
   }
   return endStr;
 }
@@ -58,8 +64,18 @@ function getOrderCategory(order) {
 
 export default function Reports() {
   const [period, setPeriod] = useState('day');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
   const [generatingPdf, setGeneratingPdf] = useState(false);
-  const { totalOrders, totalRevenue, pendingOrders, completedOrders, brandStats, coatingStats, typeStats, orders, loading } = useStats(period);
+  
+  const customDateRange = useMemo(() => {
+    if (period === 'custom' && customStart && customEnd) {
+      return { start: new Date(customStart), end: new Date(customEnd) };
+    }
+    return null;
+  }, [period, customStart, customEnd]);
+
+  const { totalOrders, totalRevenue, pendingOrders, completedOrders, brandStats, coatingStats, typeStats, orders, loading } = useStats(period, customDateRange);
 
   const avgOrderValue = useMemo(() => {
     if (!totalOrders || totalOrders === 0) return 0;
@@ -87,7 +103,7 @@ export default function Reports() {
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
       const periodLabel = getPeriodLabel(period);
-      const dateRange = getPeriodDateRange(period);
+      const dateRange = getPeriodDateRange(period, customDateRange);
       let y = 20;
 
       // Title
@@ -224,6 +240,30 @@ export default function Reports() {
           </button>
         ))}
       </div>
+
+      {/* Custom Date Range Inputs */}
+      {period === 'custom' && (
+        <div className="flex gap-3 animate-slide-up bg-black/20 p-4 rounded-xl border border-white/5">
+          <div className="flex-1">
+            <label className="text-[11px] text-white/40 font-semibold uppercase tracking-wider mb-1 block">From Date</label>
+            <input 
+              type="date" 
+              value={customStart} 
+              onChange={e => setCustomStart(e.target.value)} 
+              className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]" 
+            />
+          </div>
+          <div className="flex-1">
+            <label className="text-[11px] text-white/40 font-semibold uppercase tracking-wider mb-1 block">To Date</label>
+            <input 
+              type="date" 
+              value={customEnd} 
+              onChange={e => setCustomEnd(e.target.value)} 
+              className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]" 
+            />
+          </div>
+        </div>
+      )}
 
       {/* Loading State */}
       {loading && (

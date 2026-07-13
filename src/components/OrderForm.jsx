@@ -5,6 +5,7 @@ import {
   HiCurrencyDollar,
   HiEye,
   HiCheckCircle,
+  HiMail,
 } from 'react-icons/hi';
 import { createOrder, searchCustomers as fbSearchCustomers } from '../firebase/config';
 import { validatePhone } from '../utils/helpers';
@@ -17,6 +18,7 @@ const initialForm = {
   orderType: 'prescription', // prescription, sunglasses, contact_lenses, servicing
   customerPhone: '',
   customerName: '',
+  customerEmail: '',
   sphRight: '', cylRight: '', axisRight: '', addRight: '',
   sphLeft: '', cylLeft: '', axisLeft: '', addLeft: '',
   pd: '',
@@ -230,6 +232,16 @@ export default function OrderForm() {
               value={form.customerName}
               onChange={(e) => set('customerName', e.target.value)}
               placeholder="Customer name"
+              className="input-field w-full pl-10 pr-4 py-3 text-sm min-h-[48px]"
+            />
+          </div>
+          <div className="relative">
+            <HiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+            <input
+              type="email"
+              value={form.customerEmail}
+              onChange={(e) => set('customerEmail', e.target.value)}
+              placeholder="Email address (optional)"
               className="input-field w-full pl-10 pr-4 py-3 text-sm min-h-[48px]"
             />
           </div>
