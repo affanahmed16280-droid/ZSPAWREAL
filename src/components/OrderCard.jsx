@@ -12,7 +12,9 @@ import {
 import { formatCurrency, formatDateShort } from '../utils/helpers';
 import { updateOrderStatus, deleteOrder } from '../firebase/config';
 import toast from 'react-hot-toast';
-import { HiCog, HiTruck, HiChat } from 'react-icons/hi';
+import { HiCog, HiTruck, HiChat, HiDownload, HiMail } from 'react-icons/hi';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const DELETE_PIN = '62376';
 
@@ -238,7 +240,7 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
         {order.status === 'Ready for Pickup' && order.customerPhone && (
           <div className="mb-3 pt-2 border-t border-white/5">
             <a
-              href={`https://wa.me/${order.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${order.customerName}, your order (#${order.orderSequenceId}) from ZS Trading is ready for collection! We look forward to seeing you soon.`)}`}
+              href={`https://wa.me/${order.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`hello,i am from zs trading your order is ready for pickup for further information contact 01791729128 or 01623761027`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-2.5 rounded-lg text-xs font-bold transition-all active:scale-95"
@@ -248,6 +250,123 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
             </a>
           </div>
         )}
+
+        {/* Bill Actions (Email & PDF) */}
+        <div className="flex items-center gap-2 pt-2 border-t border-white/5 mb-3">
+          <button
+            onClick={() => {
+              const doc = new jsPDF();
+              const pageWidth = doc.internal.pageSize.getWidth();
+              let y = 20;
+
+              // Header
+              doc.setFontSize(22);
+              doc.setFont('helvetica', 'bold');
+              doc.text('ZS Trading', pageWidth / 2, y, { align: 'center' });
+              y += 8;
+              doc.setFontSize(10);
+              doc.setFont('helvetica', 'normal');
+              doc.setTextColor(100);
+              doc.text('Phone: 01791729128 / 01623761027', pageWidth / 2, y, { align: 'center' });
+              y += 10;
+              
+              doc.setDrawColor(200);
+              doc.setLineWidth(0.3);
+              doc.line(14, y, pageWidth - 14, y);
+              y += 10;
+
+              // Customer Info
+              doc.setFontSize(12);
+              doc.setFont('helvetica', 'bold');
+              doc.setTextColor(0);
+              doc.text('Customer Bill', 14, y);
+              y += 8;
+              
+              doc.setFontSize(10);
+              doc.setFont('helvetica', 'normal');
+              doc.text(`Order ID: #${order.orderSequenceId}`, 14, y);
+              doc.text(`Date: ${formatDateShort(order.orderDate)}`, pageWidth - 14, y, { align: 'right' });
+              y += 6;
+              doc.text(`Name: ${order.customerName || 'Walk-in'}`, 14, y);
+              if (order.customerPhone) {
+                y += 6;
+                doc.text(`Phone: ${order.customerPhone}`, 14, y);
+              }
+              y += 10;
+
+              // Order Details Table
+              const category = order.orderType ? order.orderType.replace('_', ' ').toUpperCase() : 'PRESCRIPTION';
+              let detailsStr = '';
+              if (order.orderType === 'prescription' || !order.orderType) {
+                detailsStr = [order.lensBrand, order.lensCoating, order.frameDetails].filter(Boolean).join(', ');
+              } else if (order.orderType === 'sunglasses') {
+                detailsStr = [order.sunglassBrand, order.sunglassModel, order.sunglassColor].filter(Boolean).join(', ');
+              } else if (order.orderType === 'contact_lenses') {
+                detailsStr = [order.contactBrand, order.quantity].filter(Boolean).join(', ');
+              } else if (order.orderType === 'servicing') {
+                detailsStr = order.serviceDescription || 'Servicing';
+              }
+
+              autoTable(doc, {
+                startY: y,
+                head: [['Item / Description', 'Amount (Tk)']],
+                body: [
+                  [category + (detailsStr ? `\n${detailsStr}` : ''), formatCurrency(order.totalAmount).replace('৳', 'Tk ')]
+                ],
+                theme: 'grid',
+                headStyles: { fillColor: [30, 30, 30], textColor: [255, 255, 255], fontStyle: 'bold' },
+                styles: { fontSize: 10, cellPadding: 5 },
+                columnStyles: { 1: { halign: 'right', cellWidth: 40 } }
+              });
+
+              y = doc.lastAutoTable.finalY + 15;
+              
+              // Total
+              doc.setFontSize(14);
+              doc.setFont('helvetica', 'bold');
+              doc.text(`Total: ${formatCurrency(order.totalAmount).replace('৳', 'Tk ')}`, pageWidth - 14, y, { align: 'right' });
+              y += 20;
+
+              // Footer Message
+              doc.setFontSize(12);
+              doc.text('Thank you for choosing ZS Trading!', pageWidth / 2, y, { align: 'center' });
+
+              doc.save(`ZS_Trading_Bill_${order.orderSequenceId}.pdf`);
+              toast.success('Bill downloaded!');
+            }}
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/30 transition-all active:scale-95"
+          >
+            <HiDownload className="text-base" />
+            Download Bill
+          </button>
+          
+          <a
+            href={`mailto:${order.customerEmail || ''}?subject=Your Bill from ZS Trading - Order #${order.orderSequenceId}&body=${encodeURIComponent(`Hello ${order.customerName || 'Valued Customer'},
+
+Thank you for your purchase at ZS Trading!
+
+--- ORDER DETAILS ---
+Order ID: #${order.orderSequenceId}
+Date: ${formatDateShort(order.orderDate)}
+Total Amount: ${formatCurrency(order.totalAmount)}
+
+We appreciate your business. If you have any questions, please contact us!
+
+Best regards,
+ZS Trading
+Phone: 01791729128 / 01623761027`)}`}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold border transition-all active:scale-95 ${order.customerEmail ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/30' : 'bg-white/5 text-white/30 border-white/10 opacity-50 cursor-not-allowed'}`}
+            onClick={(e) => {
+              if (!order.customerEmail) {
+                e.preventDefault();
+                toast.error('No email address saved for this customer');
+              }
+            }}
+          >
+            <HiMail className="text-base" />
+            Email Bill
+          </a>
+        </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 pt-2 border-t border-white/5">
