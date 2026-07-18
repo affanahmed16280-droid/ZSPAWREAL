@@ -8,11 +8,13 @@ import OrderForm from './components/OrderForm';
 import Reports from './components/Reports';
 import OrderHistory from './components/OrderHistory';
 import Expenses from './components/Expenses';
+import CustomerList from './components/CustomerList';
 import Login from './components/Login';
 
 const TABS = {
   dashboard: Dashboard,
   newOrder: OrderForm,
+  customers: CustomerList,
   reports: Reports,
   history: OrderHistory,
   expenses: Expenses,

@@ -12,12 +12,13 @@ import {
   HiMail,
   HiChat,
   HiSpeakerphone,
+  HiPencil,
 } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import { useOrders } from '../hooks/useOrders';
 import { useCustomers } from '../hooks/useCustomers';
 import { useStats } from '../hooks/useStats';
-import { getOrdersByCustomerPhone } from '../firebase/config';
+import { getOrdersByCustomerPhone, updateCustomer } from '../firebase/config';
 import { formatCurrency, formatDate, formatDateShort, getGreeting } from '../utils/helpers';
 import MetricCard from './MetricCard';
 import OrderCard from './OrderCard';
@@ -35,6 +36,10 @@ export default function Dashboard({ setActiveTab }) {
 
   const [showCampaignModal, setShowCampaignModal] = useState(false);
   const [campaignMessage, setCampaignMessage] = useState('Hello from ZS Trading! Check out our new upcoming products here: [Link]');
+
+  const [editingCustomer, setEditingCustomer] = useState(false);
+  const [editForm, setEditForm] = useState({ name: '', email: '', address: '' });
+  const [savingCustomer, setSavingCustomer] = useState(false);
 
   const searchRef = useRef(null);
   const debounceTimer = useRef(null);
@@ -88,6 +93,40 @@ export default function Dashboard({ setActiveTab }) {
   const closeModal = () => {
     setSelectedCustomer(null);
     setCustomerOrders([]);
+    setEditingCustomer(false);
+  };
+
+  const startEditCustomer = () => {
+    setEditForm({
+      name: selectedCustomer.name || selectedCustomer.displayName || '',
+      email: selectedCustomer.email || '',
+      address: selectedCustomer.address || '',
+    });
+    setEditingCustomer(true);
+  };
+
+  const saveCustomerEdits = async () => {
+    setSavingCustomer(true);
+    try {
+      await updateCustomer(selectedCustomer.phone, editForm);
+      setSelectedCustomer(prev => ({
+        ...prev,
+        name: editForm.name,
+        displayName: editForm.name,
+        email: editForm.email,
+        address: editForm.address,
+      }));
+      setEditingCustomer(false);
+      toast.success('Customer details updated!');
+    } catch (err) {
+      toast.error('Failed to update customer');
+    } finally {
+      setSavingCustomer(false);
+    }
+  };
+
+  const cancelEditCustomer = () => {
+    setEditingCustomer(false);
   };
 
   const recentOrders = (orders || []).slice(0, 5);
@@ -346,6 +385,63 @@ export default function Dashboard({ setActiveTab }) {
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-5 space-y-3">
               
+              {/* Customer Edit Section */}
+              {!editingCustomer ? (
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-sm text-white/50">
+                    {selectedCustomer.email && <span className="mr-3">✉ {selectedCustomer.email}</span>}
+                    {selectedCustomer.address && <span>📍 {selectedCustomer.address}</span>}
+                  </div>
+                  <button
+                    onClick={startEditCustomer}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-500/10 text-brand-400 border border-brand-500/30 hover:bg-brand-500/20 transition-all active:scale-95"
+                  >
+                    <HiPencil className="text-sm" />
+                    Edit
+                  </button>
+                </div>
+              ) : (
+                <div className="mb-4 p-4 bg-black/20 rounded-xl border border-brand-500/30 space-y-3 animate-fade-in">
+                  <h4 className="text-xs font-semibold text-brand-400 uppercase tracking-wider">Edit Customer Details</h4>
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Customer Name"
+                    className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]"
+                  />
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="Email Address"
+                    className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]"
+                  />
+                  <input
+                    type="text"
+                    value={editForm.address}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, address: e.target.value }))}
+                    placeholder="Address"
+                    className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={cancelEditCustomer}
+                      className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white/60 bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-95"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={saveCustomerEdits}
+                      disabled={savingCustomer}
+                      className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white bg-gradient-to-r from-brand-600 to-brand-400 hover:from-brand-500 hover:to-brand-300 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      {savingCustomer ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Latest Prescription Summary */}
               {!modalLoading && customerOrders.length > 0 && (
                 (() => {

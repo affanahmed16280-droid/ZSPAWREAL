@@ -6,6 +6,7 @@ import {
   HiEye,
   HiCheckCircle,
   HiMail,
+  HiLocationMarker,
 } from 'react-icons/hi';
 import { createOrder, searchCustomers as fbSearchCustomers } from '../firebase/config';
 import { validatePhone } from '../utils/helpers';
@@ -19,6 +20,7 @@ const initialForm = {
   customerPhone: '',
   customerName: '',
   customerEmail: '',
+  customerAddress: '',
   sphRight: '', cylRight: '', axisRight: '', addRight: '',
   sphLeft: '', cylLeft: '', axisLeft: '', addLeft: '',
   pd: '',
@@ -34,6 +36,7 @@ const initialForm = {
   lensNote: '',
   productDetails: '',
   totalAmount: '',
+  advanceAmount: '',
 };
 
 const PrescriptionGrid = ({ eye, prefix, label, form, set }) => (
@@ -248,6 +251,16 @@ export default function OrderForm() {
               className="input-field w-full pl-10 pr-4 py-3 text-sm min-h-[48px]"
             />
           </div>
+          <div className="relative">
+            <HiLocationMarker className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+            <input
+              type="text"
+              value={form.customerAddress}
+              onChange={(e) => set('customerAddress', e.target.value)}
+              placeholder="Address (optional)"
+              className="input-field w-full pl-10 pr-4 py-3 text-sm min-h-[48px]"
+            />
+          </div>
         </div>
 
         {/* === PRESCRIPTION GLASSES === */}
@@ -417,8 +430,29 @@ export default function OrderForm() {
           </div>
         </div>
 
+        {/* Advance Payment */}
+        <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '425ms' }}>
+          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+            <HiCurrencyDollar className="text-accent-gold" />
+            Advance Payment
+          </h3>
+          <div className="relative">
+            <HiCurrencyDollar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 text-lg" />
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.01"
+              value={form.advanceAmount}
+              onChange={(e) => set('advanceAmount', e.target.value)}
+              placeholder="0.00"
+              className="input-field w-full pl-10 pr-4 py-3 text-sm min-h-[48px]"
+            />
+          </div>
+        </div>
+
         {/* Submit */}
-        <div className="animate-fade-in" style={{ animationDelay: '450ms' }}>
+        <div className="animate-fade-in" style={{ animationDelay: '475ms' }}>
           <button
             type="submit"
             disabled={submitting}

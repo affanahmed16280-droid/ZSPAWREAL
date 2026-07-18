@@ -1,11 +1,11 @@
 import React from 'react';
-import { HiHome, HiPlus, HiChartBar, HiClipboardList, HiCurrencyDollar } from 'react-icons/hi';
+import { HiHome, HiPlus, HiClipboardList, HiCurrencyDollar, HiUserGroup } from 'react-icons/hi';
 
 const tabs = [
   { key: 'dashboard', label: 'Home', icon: HiHome },
   { key: 'history', label: 'History', icon: HiClipboardList },
-  { key: 'newOrder', label: 'New Order', icon: HiPlus, isCenter: true },
-  { key: 'reports', label: 'Reports', icon: HiChartBar },
+  { key: 'newOrder', label: 'New', icon: HiPlus, isCenter: true },
+  { key: 'customers', label: 'Customers', icon: HiUserGroup },
   { key: 'expenses', label: 'Expenses', icon: HiCurrencyDollar },
 ];
 

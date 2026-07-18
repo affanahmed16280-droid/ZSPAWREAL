@@ -90,10 +90,15 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
     if (order.status === 'Pending') newStatus = 'Processing';
     else if (order.status === 'Processing') newStatus = 'Ready for Pickup';
     else if (order.status === 'Ready for Pickup') newStatus = 'Delivered';
-    else if (order.status === 'Delivered' || order.status === 'Completed') newStatus = 'Pending';
-
     if (newStatus === 'Delivered') {
       setPinAction('deliver');
+      setShowPinModal(true);
+      setPin('');
+      setPinError('');
+      return;
+    } else if (order.status === 'Delivered' || order.status === 'Completed') {
+      newStatus = 'Pending';
+      setPinAction('revert');
       setShowPinModal(true);
       setPin('');
       setPinError('');
@@ -144,6 +149,8 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
       await executeCancel();
     } else if (pinAction === 'deliver') {
       await executeStatusUpdate('Delivered');
+    } else if (pinAction === 'revert') {
+      await executeStatusUpdate('Pending');
     } else if (pinAction === 'delete') {
       setIsProcessingAction(true);
       try {
@@ -302,81 +309,207 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
             onClick={() => {
               const doc = new jsPDF();
               const pageWidth = doc.internal.pageSize.getWidth();
-              let y = 20;
+              const pageHeight = doc.internal.pageSize.getHeight();
+              let y = 0;
 
-              // Header
+              // 1. Dark Navy Header Band
+              doc.setFillColor(26, 32, 44);
+              doc.rect(0, 0, pageWidth, 45, 'F');
+              doc.setTextColor(255, 255, 255);
               doc.setFontSize(22);
               doc.setFont('helvetica', 'bold');
-              doc.text('ZS Trading', pageWidth / 2, y, { align: 'center' });
-              y += 8;
+              doc.text('ZS Trading', 14, 25);
+              doc.setTextColor(212, 175, 55); // gold
+              doc.setFontSize(10);
+              doc.setFont('helvetica', 'italic');
+              doc.text('Eyewear, Considered', 14, 33);
+              doc.setFontSize(8);
+              doc.setFont('helvetica', 'bold');
+              doc.text('CUSTOMER COPY', pageWidth - 14, 25, { align: 'right' });
+              y = 55;
+
+              // 2. Contact Info Section
+              doc.setTextColor(0, 0, 0);
               doc.setFontSize(10);
               doc.setFont('helvetica', 'normal');
-              doc.setTextColor(100);
-              doc.text('Phone: 01791729128 / 01623761027', pageWidth / 2, y, { align: 'center' });
-              y += 10;
-              
-              doc.setDrawColor(200);
-              doc.setLineWidth(0.3);
+              // Using basic ASCII characters for icons/bullet points
+              doc.text('* Bashundhara, Dhaka', 14, y);
+              doc.text('# 01623761027 | 01791729128', pageWidth - 14, y, { align: 'right' });
+              y += 8;
+
+              // 3. Thin gold decorative line separator
+              doc.setDrawColor(212, 175, 55);
+              doc.setLineWidth(0.5);
               doc.line(14, y, pageWidth - 14, y);
               y += 10;
 
-              // Customer Info
-              doc.setFontSize(12);
+              // 4. Order Info Grid
               doc.setFont('helvetica', 'bold');
-              doc.setTextColor(0);
-              doc.text('Customer Bill', 14, y);
-              y += 8;
-              
-              doc.setFontSize(10);
+              doc.setFontSize(9);
+              doc.setTextColor(100, 100, 100);
+              doc.text('ORDER NO', 14, y);
+              doc.text('DATE', pageWidth / 2, y);
+              y += 5;
               doc.setFont('helvetica', 'normal');
-              doc.text(`Order ID: #${order.orderSequenceId}`, 14, y);
-              doc.text(`Date: ${formatDateShort(order.orderDate)}`, pageWidth - 14, y, { align: 'right' });
-              y += 6;
-              doc.text(`Name: ${order.customerName || 'Walk-in'}`, 14, y);
-              if (order.customerPhone) {
-                y += 6;
-                doc.text(`Phone: ${order.customerPhone}`, 14, y);
-              }
+              doc.setFontSize(11);
+              doc.setTextColor(0, 0, 0);
+              doc.text(`#${order.orderSequenceId}`, 14, y);
+              doc.text(`${formatDateShort(order.orderDate)}`, pageWidth / 2, y);
+              y += 8;
+
+              doc.setFont('helvetica', 'bold');
+              doc.setFontSize(9);
+              doc.setTextColor(100, 100, 100);
+              doc.text('NAME', 14, y);
+              y += 5;
+              doc.setFont('helvetica', 'normal');
+              doc.setFontSize(11);
+              doc.setTextColor(0, 0, 0);
+              doc.text(`${order.customerName || 'Walk-in'}`, 14, y);
+              y += 8;
+
+              doc.setFont('helvetica', 'bold');
+              doc.setFontSize(9);
+              doc.setTextColor(100, 100, 100);
+              doc.text('MOBILE NO', 14, y);
+              doc.text('ADDRESS', pageWidth / 2, y);
+              y += 5;
+              doc.setFont('helvetica', 'normal');
+              doc.setFontSize(11);
+              doc.setTextColor(0, 0, 0);
+              doc.text(`${order.customerPhone || '-'}`, 14, y);
+              const address = order.customerAddress || order.address || '-';
+              doc.text(`${address}`, pageWidth / 2, y);
               y += 10;
 
-              // Order Details Table
-              const category = order.orderType ? order.orderType.replace('_', ' ').toUpperCase() : 'PRESCRIPTION';
-              let detailsStr = '';
-              if (order.orderType === 'prescription' || !order.orderType) {
-                detailsStr = [order.lensBrand, order.lensCoating, order.frameDetails].filter(Boolean).join(', ');
-              } else if (order.orderType === 'sunglasses') {
-                detailsStr = [order.sunglassBrand, order.sunglassModel, order.sunglassColor].filter(Boolean).join(', ');
-              } else if (order.orderType === 'contact_lenses') {
-                detailsStr = [order.contactBrand, order.quantity].filter(Boolean).join(', ');
-              } else if (order.orderType === 'servicing') {
-                detailsStr = order.serviceDescription || 'Servicing';
-              } else if (order.orderType === 'inquiry') {
-                detailsStr = order.productDetails || 'Inquiry';
+              // 5. Another thin gold line separator
+              doc.setDrawColor(212, 175, 55);
+              doc.setLineWidth(0.5);
+              doc.line(14, y, pageWidth - 14, y);
+              y += 15;
+
+              // 6. Prescription Power Table
+              if (order.orderType === 'prescription' || order.orderType === 'contact_lenses' || (!order.orderType && (order.sphRight || order.cylRight))) {
+                autoTable(doc, {
+                  startY: y,
+                  head: [['EYE', 'SPH', 'CYL', 'AXIS', 'ADD']],
+                  body: [
+                    ['R (OD)', order.sphRight || '-', order.cylRight || '-', order.axisRight || '-', order.addRight || '-'],
+                    ['L (OS)', order.sphLeft || '-', order.cylLeft || '-', order.axisLeft || '-', order.addLeft || '-']
+                  ],
+                  theme: 'grid',
+                  headStyles: { fillColor: [245, 245, 245], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center' },
+                  bodyStyles: { halign: 'center' },
+                  styles: { fontSize: 10, cellPadding: 4, lineColor: [200, 200, 200], lineWidth: 0.1 },
+                  columnStyles: { 0: { fontStyle: 'bold', halign: 'left' } }
+                });
+                y = doc.lastAutoTable.finalY + 5;
+                if (order.pd) {
+                  doc.setFont('helvetica', 'bold');
+                  doc.setFontSize(10);
+                  doc.text(`PD: ${order.pd}`, 14, y);
+                  y += 10;
+                } else {
+                  y += 5;
+                }
               }
 
-              autoTable(doc, {
-                startY: y,
-                head: [['Item / Description', 'Amount (Tk)']],
-                body: [
-                  [category + (detailsStr ? `\n${detailsStr}` : ''), formatCurrency(order.totalAmount).replace('৳', 'Tk ')]
-                ],
-                theme: 'grid',
-                headStyles: { fillColor: [30, 30, 30], textColor: [255, 255, 255], fontStyle: 'bold' },
-                styles: { fontSize: 10, cellPadding: 5 },
-                columnStyles: { 1: { halign: 'right', cellWidth: 40 } }
-              });
-
-              y = doc.lastAutoTable.finalY + 15;
-              
-              // Total
-              doc.setFontSize(14);
+              // 7. Frame & Lens Section
               doc.setFont('helvetica', 'bold');
-              doc.text(`Total: ${formatCurrency(order.totalAmount).replace('৳', 'Tk ')}`, pageWidth - 14, y, { align: 'right' });
-              y += 20;
+              doc.setFontSize(9);
+              doc.setTextColor(100, 100, 100);
+              doc.text('FRAME', 14, y);
+              doc.text('LENS', pageWidth / 2, y);
+              y += 5;
+              doc.setFont('helvetica', 'normal');
+              doc.setFontSize(11);
+              doc.setTextColor(0, 0, 0);
 
-              // Footer Message
+              let frameText = '-';
+              let lensText = '-';
+              if (order.orderType === 'prescription' || !order.orderType) {
+                frameText = order.frameDetails || '-';
+                lensText = [order.lensBrand, order.lensCoating].filter(Boolean).join(', ') || '-';
+              } else if (order.orderType === 'sunglasses') {
+                frameText = [order.sunglassBrand, order.sunglassModel, order.sunglassColor].filter(Boolean).join(', ') || '-';
+              } else if (order.orderType === 'contact_lenses') {
+                lensText = [order.contactBrand, order.quantity].filter(Boolean).join(', ') || '-';
+              }
+
+              doc.text(frameText, 14, y);
+              doc.text(lensText, pageWidth / 2, y);
+              y += 6;
+              if (order.lensNote) {
+                doc.setFontSize(9);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Note: ${order.lensNote}`, 14, y);
+                y += 6;
+              }
+              y += 6;
+
+              // 8. Another thin gold line separator
+              doc.setDrawColor(212, 175, 55);
+              doc.setLineWidth(0.5);
+              doc.line(14, y, pageWidth - 14, y);
+              y += 15;
+
+              // 9. Financial Section
+              doc.setFont('helvetica', 'bold');
+              doc.setFontSize(9);
+              doc.setTextColor(100, 100, 100);
+              doc.text('TOTAL COST', 14, y);
+              y += 6;
+              doc.setFont('helvetica', 'bold');
+              doc.setFontSize(14);
+              doc.setTextColor(0, 0, 0);
+              doc.text(formatCurrency(order.totalAmount).replace('৳', 'Tk '), 14, y);
+              y += 15;
+
+              // 10. Delivery Section
+              doc.setFont('helvetica', 'bold');
+              doc.setFontSize(9);
+              doc.setTextColor(100, 100, 100);
+              doc.text('DATE OF DELIVERY', 14, y);
+              y += 6;
+              doc.setFont('helvetica', 'bold');
               doc.setFontSize(12);
-              doc.text('Thank you for choosing ZS Trading!', pageWidth / 2, y, { align: 'center' });
+              doc.setTextColor(0, 0, 0);
+              let deliveryDateStr = 'TBD';
+              if (order.deliveredAt) {
+                try {
+                  const dDate = order.deliveredAt.toDate ? order.deliveredAt.toDate() : new Date(order.deliveredAt);
+                  deliveryDateStr = formatDateShort(dDate.toISOString());
+                } catch (e) {
+                  deliveryDateStr = 'TBD';
+                }
+              }
+              doc.text(deliveryDateStr, 14, y);
+
+              // Delivery Badge
+              doc.setFillColor(26, 32, 44);
+              doc.rect(pageWidth / 2, y - 8, 80, 12, 'F');
+              doc.setTextColor(255, 255, 255);
+              doc.setFontSize(9);
+              doc.text('* DELIVERY AFTER 8 P.M.', (pageWidth / 2) + 40, y - 0.5, { align: 'center' });
+
+              y += 25;
+
+              // 11. Disclaimer
+              doc.setFont('helvetica', 'italic');
+              doc.setFontSize(8);
+              doc.setTextColor(100, 100, 100);
+              doc.text('Remarks: The authority will not be liable if the buyer fails to pick up the sold goods within 3 months.', 14, y);
+
+              // 12. Footer
+              const footerY = pageHeight - 20;
+              doc.setFont('helvetica', 'bold');
+              doc.setFontSize(9);
+              doc.setTextColor(0, 0, 0);
+              doc.text('PRESTIGE EYEWEAR & TIMEPIECES, IN STORE', pageWidth / 2, footerY, { align: 'center' });
+              doc.setFont('helvetica', 'normal');
+              doc.setFontSize(8);
+              doc.setTextColor(100, 100, 100);
+              doc.text('RAY-BAN • OMEGA • MONT BLANC • ROLEX • GUCCI', pageWidth / 2, footerY + 5, { align: 'center' });
 
               doc.save(`ZS_Trading_Bill_${order.orderSequenceId}.pdf`);
               toast.success('Bill downloaded!');
@@ -451,13 +584,20 @@ Phone: 01791729128 / 01623761027`)}`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${pinAction === 'deliver' ? 'bg-emerald-500/15' : 'bg-red-500/15'}`}>
-                <HiLockClosed className={`text-xl ${pinAction === 'deliver' ? 'text-emerald-400' : 'text-red-400'}`} />
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                pinAction === 'deliver' ? 'bg-emerald-500/15' : 
+                pinAction === 'revert' ? 'bg-amber-500/15' : 'bg-red-500/15'
+              }`}>
+                <HiLockClosed className={`text-xl ${
+                  pinAction === 'deliver' ? 'text-emerald-400' : 
+                  pinAction === 'revert' ? 'text-amber-400' : 'text-red-400'
+                }`} />
               </div>
               <div>
                 <h3 className="text-base font-bold text-white">
                   {pinAction === 'delete' ? `Delete Order #${order.orderSequenceId}` : 
                    pinAction === 'cancel' ? `Cancel Order #${order.orderSequenceId}` : 
+                   pinAction === 'revert' ? `Revert Order #${order.orderSequenceId} to Pending` :
                    `Mark Order #${order.orderSequenceId} as Delivered`}
                 </h3>
                 <p className="text-xs text-white/40">Enter PIN to {pinAction}</p>
@@ -501,11 +641,14 @@ Phone: 01791729128 / 01623761027`)}`}
                   disabled:opacity-40 disabled:cursor-not-allowed min-h-[48px]
                   ${pinAction === 'deliver' 
                     ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400' 
+                    : pinAction === 'revert'
+                    ? 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400'
                     : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400'}`}
               >
                 {isProcessingAction ? 'Processing...' : (
                   pinAction === 'delete' ? 'Delete Forever' : 
                   pinAction === 'cancel' ? 'Cancel Order' : 
+                  pinAction === 'revert' ? 'Revert to Pending' :
                   'Confirm Delivery'
                 )}
               </button>

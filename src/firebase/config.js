@@ -75,6 +75,7 @@ export async function createOrder({
   customerPhone,
   customerName,
   customerEmail,
+  customerAddress,
   sphRight,
   cylRight,
   axisRight,
@@ -96,6 +97,7 @@ export async function createOrder({
   lensNote,
   productDetails,
   totalAmount,
+  advanceAmount,
 }) {
   // Normalize phone for consistent document IDs
   const phone = normalizePhone(customerPhone);
@@ -109,6 +111,7 @@ export async function createOrder({
     name: (customerName || '').toLowerCase(),
     displayName: customerName || '',
     ...(customerEmail ? { email: customerEmail } : {}),
+    ...(customerAddress ? { address: customerAddress } : {}),
   }, { merge: true }).catch(console.error);
 
   // 2. Counter increment (Offline compatible: removed transaction) -----------
@@ -130,6 +133,7 @@ export async function createOrder({
     customerPhone: phone,
     customerName: customerName || '',
     customerEmail: customerEmail || '',
+    customerAddress: customerAddress || '',
     sphRight: sphRight ?? null,
     cylRight: cylRight ?? null,
     axisRight: axisRight ?? null,
@@ -151,6 +155,7 @@ export async function createOrder({
     lensNote: lensNote ?? '',
     productDetails: productDetails ?? '',
     totalAmount: Number(totalAmount) || 0,
+    advanceAmount: Number(advanceAmount) || 0,
     orderDate: Timestamp.now(),
     status: 'Pending',
   }).catch(console.error);
@@ -162,10 +167,15 @@ export async function createOrder({
 // ─── updateOrderStatus ───────────────────────────────────────────────────────
 export async function updateOrderStatus(orderId, newStatus) {
   const orderRef = doc(ordersCol, orderId);
-  updateDoc(orderRef, {
+  const updateData = {
     status: newStatus,
     updatedAt: Timestamp.now(),
-  }).catch(console.error);
+  };
+  // Record the delivery timestamp when status changes to Delivered
+  if (newStatus === 'Delivered') {
+    updateData.deliveredAt = Timestamp.now();
+  }
+  updateDoc(orderRef, updateData).catch(console.error);
 }
 
 // ─── deleteOrder ─────────────────────────────────────────────────────────────
@@ -305,4 +315,41 @@ export async function addExpense({ category, description, amount }) {
 export async function deleteExpense(expenseId) {
   const expenseRef = doc(expensesCol, expenseId);
   deleteDoc(expenseRef).catch(console.error);
+}
+
+// ─── updateCustomer ──────────────────────────────────────────────────────────
+// Updates a customer's details (name, email, address) in the customers collection.
+export async function updateCustomer(phone, updates) {
+  const normalized = normalizePhone(phone);
+  if (!normalized) throw new Error('Phone number is required');
+  const customerRef = doc(customersCol, normalized);
+  const updateData = {};
+  if (updates.name !== undefined) {
+    updateData.name = (updates.name || '').toLowerCase();
+    updateData.displayName = updates.name || '';
+  }
+  if (updates.email !== undefined) updateData.email = updates.email;
+  if (updates.address !== undefined) updateData.address = updates.address;
+  updateData.updatedAt = Timestamp.now();
+  await setDoc(customerRef, updateData, { merge: true });
+}
+
+// ─── updateOrderDetails ──────────────────────────────────────────────────────
+// Updates specific fields on an order (e.g. prescription power, address, advance).
+export async function updateOrderDetails(orderId, updates) {
+  const orderRef = doc(ordersCol, orderId);
+  await updateDoc(orderRef, {
+    ...updates,
+    updatedAt: Timestamp.now(),
+  });
+}
+
+// ─── getAllCustomers ─────────────────────────────────────────────────────────
+// Fetches all customers from Firestore.
+export async function getAllCustomers() {
+  const snap = await getDocs(query(customersCol, limit(500)));
+  return snap.docs.map((d) => ({
+    phone: d.id,
+    ...d.data(),
+  }));
 }
