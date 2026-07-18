@@ -26,11 +26,9 @@ export default function App() {
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsAuthenticated(!!user);
-      setIsInitializing(false);
-    });
-    return () => unsubscribe();
+    // Force user to log in on every refresh
+    setIsAuthenticated(false);
+    setIsInitializing(false);
   }, []);
 
   const ActiveComponent = TABS[activeTab] || Dashboard;
@@ -44,7 +42,7 @@ export default function App() {
   }
 
   if (!isAuthenticated) {
-    return <Login />;
+    return <Login onLoginSuccess={() => setIsAuthenticated(true)} />;
   }
 
   return (

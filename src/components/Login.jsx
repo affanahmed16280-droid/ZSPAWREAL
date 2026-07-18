@@ -1,27 +1,34 @@
 import React, { useState } from 'react';
 import { HiLockClosed, HiMail } from 'react-icons/hi';
 import toast from 'react-hot-toast';
-import { auth } from '../firebase/config';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 
-export default function Login() {
+export default function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast.error('Please enter email and password');
+    if (!password) {
+      toast.error('Please enter password');
       return;
     }
     
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast.success('Welcome to ZS Trading!');
+      // Simulate network request
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // We can use the same PIN since it's a simple restricted access app
+      // Or we can check against a specific password
+      if (password === 'zsadmin62376' || password === '62376') {
+        toast.success('Welcome to ZS Trading!');
+        if (onLoginSuccess) onLoginSuccess();
+      } else {
+        toast.error('Invalid password');
+      }
     } catch (err) {
-      toast.error('Invalid credentials or unauthorized access');
+      toast.error('Authentication failed');
     } finally {
       setLoading(false);
     }
@@ -40,17 +47,7 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-3">
-            <div className="relative">
-              <HiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 text-lg" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Admin Email"
-                className="input-field w-full pl-11 pr-4 py-3.5 text-sm"
-                autoCapitalize="none"
-              />
-            </div>
+            {/* Email field removed as we only need password now */}
             <div className="relative">
               <HiLockClosed className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 text-lg" />
               <input
