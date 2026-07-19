@@ -2,10 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   HiSearch, HiUser, HiPhone, HiMail, HiLocationMarker,
   HiX, HiChevronRight, HiPencil, HiCheck, HiEye, HiShoppingCart, HiChat,
-  HiUserGroup
+  HiUserGroup, HiTrash, HiLockClosed
 } from 'react-icons/hi';
 import toast from 'react-hot-toast';
-import { getAllCustomers, getOrdersByCustomerPhone, updateCustomer } from '../firebase/config';
+import { getAllCustomers, getOrdersByCustomerPhone, updateCustomer, deleteCustomer } from '../firebase/config';
 import { formatCurrency, formatDateShort } from '../utils/helpers';
 import OrderCard from './OrderCard';
 
@@ -22,6 +22,11 @@ export default function CustomerList() {
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ name: '', email: '', address: '' });
   const [saving, setSaving] = useState(false);
+
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pin, setPin] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   const fetchCustomers = useCallback(async () => {
     setLoading(true);
@@ -117,6 +122,32 @@ export default function CustomerList() {
     }
   };
 
+  const handleDeleteClick = () => {
+    setShowPinModal(true);
+    setPin('');
+    setPinError('');
+  };
+
+  const confirmDeleteCustomer = async () => {
+    if (pin !== '62376') {
+      setPinError('Incorrect PIN');
+      return;
+    }
+    
+    setDeleting(true);
+    try {
+      await deleteCustomer(selectedCustomer.phone);
+      setCustomers(prev => prev.filter(c => c.phone !== selectedCustomer.phone));
+      toast.success('Customer deleted permanently');
+      setShowPinModal(false);
+      closeModal();
+    } catch (err) {
+      toast.error('Failed to delete customer');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="px-4 py-6 space-y-6 pb-28 min-h-screen">
       {/* Header */}
@@ -164,11 +195,11 @@ export default function CustomerList() {
           </div>
         ) : (
           filteredCustomers.map((customer, idx) => (
-            <button
+            <div
               key={customer.phone}
-              onClick={() => openCustomerModal(customer)}
-              className="w-full glass-card p-4 rounded-xl hover:bg-white/5 transition-all duration-200 active:scale-[0.98] text-left flex items-center gap-4"
+              className="w-full glass-card p-4 rounded-xl hover:bg-white/5 transition-all duration-200 text-left flex items-center gap-4 cursor-pointer"
               style={{ animationDelay: `${idx * 20}ms` }}
+              onClick={() => openCustomerModal(customer)}
             >
               <div className="w-12 h-12 rounded-full bg-accent-gold/15 flex items-center justify-center flex-shrink-0 border border-accent-gold/20">
                 <span className="text-accent-gold font-bold text-lg">
@@ -184,8 +215,18 @@ export default function CustomerList() {
                   <span>{customer.phone}</span>
                 </div>
               </div>
-              <HiChevronRight className="text-white/30 text-xl" />
-            </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedCustomer(customer);
+                  handleDeleteClick();
+                }}
+                className="p-2 text-white/30 hover:text-red-400 bg-white/5 hover:bg-red-500/20 rounded-lg transition-all"
+                title="Delete Customer"
+              >
+                <HiTrash className="text-xl" />
+              </button>
+            </div>
           ))
         )}
       </div>
@@ -263,13 +304,22 @@ export default function CustomerList() {
                       <p className="italic text-white/30 text-xs">No additional details</p>
                     )}
                   </div>
-                  <button
-                    onClick={startEdit}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 transition-all active:scale-95 shrink-0"
-                  >
-                    <HiPencil className="text-sm" />
-                    Edit
-                  </button>
+                  <div className="flex flex-col gap-2 shrink-0">
+                    <button
+                      onClick={startEdit}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 transition-all active:scale-95 w-full justify-center"
+                    >
+                      <HiPencil className="text-sm" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={handleDeleteClick}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all active:scale-95 w-full justify-center"
+                    >
+                      <HiTrash className="text-sm" />
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="p-4 bg-surface-800 rounded-xl border border-brand-500/30 space-y-3 animate-fade-in shadow-lg">
@@ -358,6 +408,61 @@ export default function CustomerList() {
                   </div>
                 )}
               </div>
+            </div>
+      {/* PIN Modal for Customer Delete */}
+      {showPinModal && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center animate-fade-in"
+          onClick={() => setShowPinModal(false)}
+        >
+          <div
+            className="w-[90%] max-w-sm bg-surface-900 rounded-2xl border border-white/10 p-6 space-y-4 animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-red-500/15">
+                <HiLockClosed className="text-xl text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Delete Customer</h3>
+                <p className="text-xs text-white/40">Enter PIN to delete forever</p>
+              </div>
+            </div>
+
+            <div>
+              <input
+                type="password"
+                inputMode="numeric"
+                maxLength={5}
+                value={pin}
+                onChange={(e) => {
+                  setPin(e.target.value);
+                  setPinError('');
+                }}
+                onKeyDown={(e) => e.key === 'Enter' && confirmDeleteCustomer()}
+                placeholder="Enter 5-digit PIN"
+                className="input-field w-full py-3 px-4 text-center text-lg tracking-[0.5em] font-bold min-h-[48px]"
+                autoFocus
+              />
+              {pinError && (
+                <p className="text-red-400 text-xs text-center mt-2 animate-fade-in">{pinError}</p>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowPinModal(false)}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold text-white/60 bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-200 active:scale-95 min-h-[48px]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteCustomer}
+                disabled={deleting || pin.length < 5}
+                className="flex-1 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed min-h-[48px] bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400"
+              >
+                {deleting ? 'Deleting...' : 'Delete Forever'}
+              </button>
             </div>
           </div>
         </div>

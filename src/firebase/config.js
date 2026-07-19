@@ -171,7 +171,10 @@ export async function updateOrderStatus(orderId, newStatus) {
     status: newStatus,
     updatedAt: Timestamp.now(),
   };
-  // Record the delivery timestamp when status changes to Delivered
+  // Record timestamps for status changes
+  if (newStatus === 'Ready for Pickup') {
+    updateData.readyAt = Timestamp.now();
+  }
   if (newStatus === 'Delivered') {
     updateData.deliveredAt = Timestamp.now();
   }
@@ -332,6 +335,14 @@ export async function updateCustomer(phone, updates) {
   if (updates.address !== undefined) updateData.address = updates.address;
   updateData.updatedAt = Timestamp.now();
   await setDoc(customerRef, updateData, { merge: true });
+}
+
+// ─── deleteCustomer ──────────────────────────────────────────────────────────
+export async function deleteCustomer(phone) {
+  const normalized = normalizePhone(phone);
+  if (!normalized) throw new Error('Phone number is required');
+  const customerRef = doc(customersCol, normalized);
+  await deleteDoc(customerRef);
 }
 
 // ─── updateOrderDetails ──────────────────────────────────────────────────────

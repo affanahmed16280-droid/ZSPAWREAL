@@ -333,8 +333,8 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
               doc.setFontSize(10);
               doc.setFont('helvetica', 'normal');
               // Using basic ASCII characters for icons/bullet points
-              doc.text('* Bashundhara, Dhaka', 14, y);
-              doc.text('# 01623761027 | 01791729128', pageWidth - 14, y, { align: 'right' });
+              doc.text('* Ronex Mart 1 Block -G ,Road 1,House 714/A', 14, y);
+              doc.text('# 01791729128 | 01623761027', pageWidth - 14, y, { align: 'right' });
               y += 8;
 
               // 3. Thin gold decorative line separator
@@ -475,9 +475,11 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
               doc.setFontSize(12);
               doc.setTextColor(0, 0, 0);
               let deliveryDateStr = 'TBD';
-              if (order.deliveredAt) {
+              // Use readyAt if available (as requested), otherwise fallback to deliveredAt
+              const deliveryTimestamp = order.readyAt || order.deliveredAt;
+              if (deliveryTimestamp) {
                 try {
-                  const dDate = order.deliveredAt.toDate ? order.deliveredAt.toDate() : new Date(order.deliveredAt);
+                  const dDate = deliveryTimestamp.toDate ? deliveryTimestamp.toDate() : new Date(deliveryTimestamp);
                   deliveryDateStr = formatDateShort(dDate.toISOString());
                 } catch (e) {
                   deliveryDateStr = 'TBD';
