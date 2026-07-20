@@ -90,6 +90,53 @@ const ChipSelector = ({ label, options, field, form, set }) => (
   </div>
 );
 
+// ─── PD Split Input ───────────────────────────────────────────────────────────
+// Renders two boxes (R / L) with a '/' divider. The combined value is stored
+// in form.pd as 'right/left' (or just 'right' if left is empty).
+function PDInput({ pd, onChange }) {
+  // Parse incoming pd value (e.g. '32/33', '63', '')
+  const parts = (pd || '').split('/');
+  const right = parts[0] ?? '';
+  const left  = parts[1] ?? '';
+
+  const update = (side, val) => {
+    const r = side === 'r' ? val : right;
+    const l = side === 'l' ? val : left;
+    // Build combined: if both have values → 'r/l', if only right → 'r'
+    onChange(l !== '' ? `${r}/${l}` : r);
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1">
+        <label className="text-[10px] text-white/40 uppercase font-semibold tracking-wider mb-1 block text-center">Right (OD)</label>
+        <input
+          type="text"
+          inputMode="decimal"
+          value={right}
+          onChange={(e) => update('r', e.target.value)}
+          placeholder="e.g. 32"
+          className="input-field w-full py-2.5 px-3 text-sm text-center min-h-[44px]"
+        />
+      </div>
+      <div className="flex flex-col items-center pt-5">
+        <span className="text-2xl font-bold text-white/30 select-none">/</span>
+      </div>
+      <div className="flex-1">
+        <label className="text-[10px] text-white/40 uppercase font-semibold tracking-wider mb-1 block text-center">Left (OS)</label>
+        <input
+          type="text"
+          inputMode="decimal"
+          value={left}
+          onChange={(e) => update('l', e.target.value)}
+          placeholder="e.g. 31"
+          className="input-field w-full py-2.5 px-3 text-sm text-center min-h-[44px]"
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function OrderForm() {
   const [form, setForm] = useState(initialForm);
   const [submitting, setSubmitting] = useState(false);
@@ -274,14 +321,7 @@ export default function OrderForm() {
             </div>
             <div className="glass-card p-4 space-y-3 animate-fade-in" style={{ animationDelay: '200ms' }}>
               <h3 className="text-sm font-semibold text-white">Pupillary Distance (PD)</h3>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={form.pd}
-                onChange={(e) => set('pd', e.target.value)}
-                placeholder="e.g. 63"
-                className="input-field w-full py-2.5 px-3 text-sm min-h-[44px]"
-              />
+              <PDInput pd={form.pd} onChange={(val) => set('pd', val)} />
             </div>
             <div className="animate-fade-in" style={{ animationDelay: '250ms' }}>
               <ChipSelector label="Lens Brand" options={LENS_BRANDS} field="lensBrand" form={form} set={set} />

@@ -292,7 +292,11 @@ export default function OrderCard({ order, onStatusToggle, onDelete }) {
         {order.status === 'Ready for Pickup' && order.customerPhone && (
           <div className="mb-3 pt-2 border-t border-white/5">
             <a
-              href={`https://wa.me/${order.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`hello,i am from zs trading your order is ready for pickup for further information contact 01791729128 or 01623761027`)}`}
+              href={(() => {
+                const digits = (order.customerPhone || '').replace(/\D/g, '');
+                const intl = digits.startsWith('0') ? '880' + digits.slice(1) : digits;
+                return `https://wa.me/${intl}?text=${encodeURIComponent(`hello,i am from zs trading your order is ready for pickup for further information contact 01791729128 or 01623761027`)}`;
+              })()}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-2.5 rounded-lg text-xs font-bold transition-all active:scale-95"

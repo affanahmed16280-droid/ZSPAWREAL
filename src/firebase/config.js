@@ -321,11 +321,15 @@ export async function deleteExpense(expenseId) {
 }
 
 // ─── updateCustomer ──────────────────────────────────────────────────────────
-// Updates a customer's details (name, email, address) in the customers collection.
+// Updates a customer's details (name, email, address, phone) in the customers collection.
+// If newPhone is provided and differs from phone, migrates the document to the new phone ID.
 export async function updateCustomer(phone, updates) {
   const normalized = normalizePhone(phone);
   if (!normalized) throw new Error('Phone number is required');
-  const customerRef = doc(customersCol, normalized);
+
+  const newPhone = updates.phone ? normalizePhone(updates.phone) : null;
+  const phoneChanged = newPhone && newPhone !== normalized;
+
   const updateData = {};
   if (updates.name !== undefined) {
     updateData.name = (updates.name || '').toLowerCase();
@@ -334,7 +338,31 @@ export async function updateCustomer(phone, updates) {
   if (updates.email !== undefined) updateData.email = updates.email;
   if (updates.address !== undefined) updateData.address = updates.address;
   updateData.updatedAt = Timestamp.now();
-  await setDoc(customerRef, updateData, { merge: true });
+
+  if (phoneChanged) {
+    // Read existing customer data
+    const oldRef = doc(customersCol, normalized);
+    const oldSnap = await getDoc(oldRef);
+    const existingData = oldSnap.exists() ? oldSnap.data() : {};
+
+    // Create new doc with merged data
+    const newRef = doc(customersCol, newPhone);
+    await setDoc(newRef, { ...existingData, ...updateData }, { merge: true });
+
+    // Update all existing orders to point to the new phone
+    const q = query(ordersCol, where('customerPhone', '==', normalized));
+    const snap = await getDocs(q);
+    const orderUpdates = snap.docs.map((d) =>
+      updateDoc(d.ref, { customerPhone: newPhone, updatedAt: Timestamp.now() })
+    );
+    await Promise.all(orderUpdates);
+
+    // Delete old customer doc
+    await deleteDoc(oldRef);
+  } else {
+    const customerRef = doc(customersCol, normalized);
+    await setDoc(customerRef, updateData, { merge: true });
+  }
 }
 
 // ─── deleteCustomer ──────────────────────────────────────────────────────────
@@ -343,6 +371,42 @@ export async function deleteCustomer(phone) {
   if (!normalized) throw new Error('Phone number is required');
   const customerRef = doc(customersCol, normalized);
   await deleteDoc(customerRef);
+}
+
+// ─── deleteCustomerAndOrders ─────────────────────────────────────────────────
+// Permanently deletes a customer document AND all their orders.
+export async function deleteCustomerAndOrders(phone) {
+  const normalized = normalizePhone(phone);
+  if (!normalized) throw new Error('Phone number is required');
+
+  // Fetch all orders for this customer
+  const q = query(ordersCol, where('customerPhone', '==', normalized));
+  const snap = await getDocs(q);
+
+  // Delete all orders in parallel
+  const deletePromises = snap.docs.map((d) => deleteDoc(d.ref));
+  await Promise.all(deletePromises);
+
+  // Delete the customer doc
+  await deleteDoc(doc(customersCol, normalized));
+}
+
+// ─── getLatestOrderByPhone ───────────────────────────────────────────────────
+// Returns the most recent order for a customer (for showing/editing power).
+export async function getLatestOrderByPhone(phone) {
+  const normalized = normalizePhone(phone);
+  const q = query(ordersCol, where('customerPhone', '==', normalized));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+
+  const orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  // Sort descending by orderDate
+  orders.sort((a, b) => {
+    const tA = a.orderDate?.toMillis ? a.orderDate.toMillis() : new Date(a.orderDate).getTime();
+    const tB = b.orderDate?.toMillis ? b.orderDate.toMillis() : new Date(b.orderDate).getTime();
+    return tB - tA;
+  });
+  return orders[0];
 }
 
 // ─── updateOrderDetails ──────────────────────────────────────────────────────
